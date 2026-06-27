@@ -26,31 +26,51 @@
                     <div class="flex flex-wrap gap-2">
                         {{range $sa := $socials}}
                         {{$brand := platformColor $sa.Platform}}
-                        <div class="relative group" x-data="{ show: false }" @mouseenter="show = true" @mouseleave="show = false">
+                        <div class="relative group"
+                             x-data="{ show: false, isTouch: false }"
+                             x-init="isTouch = window.matchMedia('(hover: none)').matches"
+                             @mouseenter="!isTouch && (show = true)"
+                             @mouseleave="!isTouch && (show = false)"
+                             @click.outside="isTouch && (show = false)">
                             {{if $sa.URL}}
-                            <a href="{{$sa.URL}}" target="_blank" rel="noopener" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-200 hover:scale-105 hover:text-white transition-all" style="--brand: {{$brand}}" onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand');" onmouseout="this.style.background=''; this.style.borderColor='';">
+                            <a href="{{$sa.URL}}" target="_blank" rel="noopener"
+                               @click="if (isTouch && !show) { $event.preventDefault(); show = true; }"
+                               class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-200 hover:scale-105 hover:text-white transition-all"
+                               style="--brand: {{$brand}}"
+                               onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand');"
+                               onmouseout="this.style.background=''; this.style.borderColor='';">
                                 <span class="w-4 h-4 flex-shrink-0">{{platformSVG $sa.Platform}}</span>
                                 <span class="text-xs font-medium">{{platformLabel $sa.Platform}} · {{$sa.Name}}</span>
                             </a>
                             {{else}}
-                            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-200 cursor-pointer hover:scale-105 hover:text-white transition-all" style="--brand: {{$brand}}" onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand');" onmouseout="this.style.background=''; this.style.borderColor='';">
+                            <div @click="isTouch && (show = !show)"
+                                 class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-200 cursor-pointer hover:scale-105 hover:text-white transition-all"
+                                 style="--brand: {{$brand}}"
+                                 onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand');"
+                                 onmouseout="this.style.background=''; this.style.borderColor='';">
                                 <span class="w-4 h-4 flex-shrink-0">{{platformSVG $sa.Platform}}</span>
                                 <span class="text-xs font-medium">{{platformLabel $sa.Platform}} · {{$sa.Name}}</span>
                             </div>
                             {{end}}
-                            {{if or $sa.QRURL $sa.Identifier}}
-                            <div x-show="show" x-cloak x-transition.opacity class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 pointer-events-none">
-                                <div class="bg-white rounded-lg shadow-2xl p-3 min-w-[150px]">
-                                    {{if $sa.QRURL}}<div class="w-32 h-32 mx-auto"><img src="{{$sa.QRURL}}" alt="{{$sa.Name}}" class="w-full h-full object-contain"></div>{{end}}
-                                    <div class="text-center mt-2">
+
+                            <!-- Popover: 桌面悬停 / 移动端点击触发，无条件渲染 -->
+                            <div x-show="show" x-cloak x-transition.opacity
+                                 :class="isTouch ? 'pointer-events-auto' : 'pointer-events-none'"
+                                 class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20">
+                                <div class="bg-white rounded-lg shadow-2xl p-3 min-w-[160px] max-w-[240px]">
+                                    {{if $sa.QRURL}}<div class="w-32 h-32 mx-auto mb-2"><img src="{{$sa.QRURL}}" alt="{{$sa.Name}}" class="w-full h-full object-contain"></div>{{end}}
+                                    <div class="text-center">
                                         <div class="text-xs font-semibold text-gray-900">{{$sa.Name}}</div>
-                                        <div class="text-[10px] text-gray-500">{{platformLabel $sa.Platform}}{{if $sa.Identifier}} · {{$sa.Identifier}}{{end}}</div>
-                                        {{if $sa.Description}}<div class="text-[10px] text-gray-400 mt-1">{{$sa.Description}}</div>{{end}}
+                                        <div class="text-[10px] text-gray-500 mt-0.5 flex items-center justify-center gap-1 flex-wrap">
+                                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background: {{$brand}};"></span>
+                                            <span>{{platformLabel $sa.Platform}}</span>
+                                            {{if $sa.Identifier}}<span class="text-gray-300">·</span><span class="font-mono">{{$sa.Identifier}}</span>{{end}}
+                                        </div>
+                                        {{if $sa.Description}}<div class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">{{$sa.Description}}</div>{{end}}
                                     </div>
                                 </div>
                                 <div class="w-2 h-2 bg-white rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-1"></div>
                             </div>
-                            {{end}}
                         </div>
                         {{end}}
                     </div>
