@@ -5,8 +5,9 @@ speedcraft
 # Database
 data/*.db
 
-# Uploads
+# Uploads (allow .gitkeep so directory exists in repo for Docker build)
 static/uploads/*
+!static/uploads/.gitkeep
 
 # IDE
 .idea/

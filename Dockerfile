@@ -27,7 +27,7 @@ WORKDIR /app
 COPY --from=builder /speedcraft .
 COPY templates ./templates
 COPY static ./static
-RUN mkdir -p data && chown -R speedcraft:speedcraft /app
+RUN mkdir -p data static/uploads && chown -R speedcraft:speedcraft /app
 
 USER speedcraft
 EXPOSE 8080
