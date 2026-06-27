@@ -10,9 +10,13 @@
     </div>
 </section>
 <section class="py-12 bg-gray-50">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <article class="bg-white rounded-xl p-8 md:p-12 border border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <article class="bg-white rounded-xl p-6 md:p-10 border border-gray-200">
+            {{if eq $p.ContentType "html"}}
+            <div>{{safeHTML $d.content}}</div>
+            {{else}}
             <div class="prose prose-lg max-w-none">{{safeHTML $d.content}}</div>
+            {{end}}
         </article>
     </div>
 </section>

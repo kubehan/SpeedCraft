@@ -897,12 +897,17 @@ func AdminPageSave(cfg *config.Config) http.HandlerFunc {
 		if slug == "" {
 			slug = strings.ToLower(strings.ReplaceAll(strings.TrimSpace(r.FormValue("title")), " ", "-"))
 		}
+		renderMode := r.FormValue("render_mode")
+		if renderMode != "standalone" {
+			renderMode = "embed"
+		}
 		_, err := models.SavePage(&models.Page{
 			ID:          id,
 			Title:       r.FormValue("title"),
 			Slug:        slug,
 			Content:     r.FormValue("content"),
 			ContentType: r.FormValue("content_type"),
+			RenderMode:  renderMode,
 			IsPublished: published,
 		})
 		if err != nil {

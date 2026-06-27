@@ -147,6 +147,7 @@ func migrate() error {
 			slug TEXT UNIQUE NOT NULL,
 			content TEXT NOT NULL,
 			content_type TEXT DEFAULT 'markdown',
+			render_mode TEXT DEFAULT 'embed',
 			is_published INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -161,6 +162,8 @@ func migrate() error {
 
 	// Add views column if missing (v2 migration)
 	DB.Exec("ALTER TABLE blog_posts ADD COLUMN views INTEGER DEFAULT 0")
+	// Add render_mode column if missing (v3 migration)
+	DB.Exec("ALTER TABLE pages ADD COLUMN render_mode TEXT DEFAULT 'embed'")
 
 	if err := seedDefaults(); err != nil {
 		return fmt.Errorf("seed defaults: %w", err)

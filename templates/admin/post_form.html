@@ -24,17 +24,14 @@
                 <div class="flex items-center gap-3">
                     <select name="content_type" x-model="contentType" class="form-input w-auto bg-white py-1.5"><option value="markdown" {{if eq $p.ContentType "markdown"}}selected{{end}}>Markdown</option><option value="html" {{if eq $p.ContentType "html"}}selected{{end}}>HTML</option></select>
                     <button type="button" @click="openImagePicker" class="btn-secondary text-sm">📷 插入图片</button>
-                    <button type="button" @click="preview" class="btn-secondary text-sm">预览</button>
+                    <button type="button" @click="preview" :disabled="previewing" class="btn-secondary text-sm">
+                        <span x-show="!previewing">👁 预览</span>
+                        <span x-show="previewing" x-cloak>渲染中...</span>
+                    </button>
                 </div>
             </div>
             <div class="page-card-body">
                 <textarea name="content" rows="20" x-model="content" class="form-input font-mono text-sm" id="post-content">{{$p.Content}}</textarea>
-            </div>
-        </div>
-        <div x-show="showPreview" x-cloak class="page-card">
-            <div class="page-card-body">
-                <h3 class="text-sm font-medium text-slate-700 mb-3">预览</h3>
-                <div class="prose prose-sm max-w-none" x-html="previewHTML"></div>
             </div>
         </div>
         <div class="page-card">
@@ -90,6 +87,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Preview modal -->
+    <div x-show="showPreview" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showPreview = false" @keydown.escape.window="showPreview = false">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-base font-semibold text-slate-900">📄 预览</h3>
+                    <span class="text-xs text-slate-400" x-text="contentType === 'markdown' ? 'Markdown 渲染' : 'HTML 直接渲染'"></span>
+                </div>
+                <button @click="showPreview = false" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-slate-50">
+                <article class="bg-white rounded-lg p-6 md:p-10 border border-slate-200 max-w-3xl mx-auto">
+                    <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-2" x-text="title || '（未填标题）'"></h1>
+                    <div class="text-sm text-slate-400 mb-6 pb-4 border-b border-slate-100">
+                        <span x-text="tagsStr || '无标签'"></span>
+                    </div>
+                    <div class="prose prose-slate prose-lg max-w-none" x-html="previewHTML"></div>
+                    <p x-show="!previewHTML" class="text-slate-400 text-sm">（内容为空）</p>
+                </article>
+            </div>
+            <div class="flex items-center justify-between px-5 py-3 border-t border-slate-200 bg-slate-50 text-xs text-slate-500">
+                <span>按 ESC 或点击空白处关闭</span>
+                <button @click="showPreview = false" class="btn-secondary text-xs">关闭</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -102,6 +126,7 @@
             contentType: '{{$p.ContentType}}',
             showPreview: false,
             previewHTML: '',
+            previewing: false,
             showImagePicker: false,
             images: [],
             uploading: false,
@@ -119,10 +144,27 @@
                 }
             },
             async preview() {
-                if (this.contentType === 'html') { this.previewHTML = this.content; this.showPreview = true; return; }
-                const res = await fetch('/admin/preview', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'csrf_token=' + encodeURIComponent(this.csrfToken) + '&content=' + encodeURIComponent(this.content) });
-                this.previewHTML = await res.text();
-                this.showPreview = true;
+                if (this.previewing) return;
+                this.previewing = true;
+                this.previewHTML = '';
+                try {
+                    if (this.contentType === 'html') {
+                        this.previewHTML = this.content || '';
+                    } else {
+                        var body = 'csrf_token=' + encodeURIComponent(this.csrfToken) + '&content=' + encodeURIComponent(this.content || '');
+                        const res = await fetch('/admin/preview', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: body });
+                        if (!res.ok) {
+                            this.previewHTML = '<div style="color:#dc2626;padding:1rem;background:#fef2f2;border-radius:8px;">预览失败 (HTTP ' + res.status + '): ' + (await res.text()) + '</div>';
+                        } else {
+                            this.previewHTML = await res.text();
+                        }
+                    }
+                    this.showPreview = true;
+                } catch(e) {
+                    this.previewHTML = '<div style="color:#dc2626;padding:1rem;background:#fef2f2;border-radius:8px;">渲染异常: ' + (e.message || e) + '</div>';
+                    this.showPreview = true;
+                }
+                this.previewing = false;
             },
             async openImagePicker() {
                 this.images = [];

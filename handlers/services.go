@@ -48,6 +48,15 @@ func PublicPage(cfg *config.Config) http.HandlerFunc {
 			http.NotFound(w, r)
 			return
 		}
+
+		// Standalone: render raw HTML directly without site layout
+		if page.RenderMode == "standalone" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write([]byte(page.Content))
+			return
+		}
+
+		// Embed mode: wrap with site layout, render markdown if applicable
 		content := page.Content
 		if page.ContentType == "markdown" {
 			content = renderMarkdown(content)

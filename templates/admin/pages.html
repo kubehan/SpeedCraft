@@ -2,7 +2,7 @@
 {{define "admin_content"}}
 {{$d := .Data}}
 {{$p := $d.edit}}
-<div class="max-w-5xl">
+<div class="max-w-5xl" x-data="pageEditor()">
     <div class="flex items-center justify-between mb-6">
         <div><h1 class="text-xl font-bold text-slate-900">页面管理</h1><p class="text-sm text-slate-500 mt-0.5">创建自定义页面，自动在 /page/{slug} 访问</p></div>
     </div>
@@ -18,15 +18,45 @@
                     <div><label class="form-label">页面标题 *</label><input type="text" name="title" required class="form-input" value="{{$p.Title}}" placeholder="关于我们"></div>
                     <div><label class="form-label">链接别名 (slug)</label><input type="text" name="slug" class="form-input" value="{{$p.Slug}}" placeholder="about-us"> <p class="text-[10px] text-slate-400 mt-0.5">访问路径: /page/<b>{{if $p.Slug}}{{$p.Slug}}{{else}}slug{{end}}</b></p></div>
                 </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                    <label class="form-label !mb-0">渲染模式</label>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="render_mode" value="embed" x-model="renderMode" class="peer sr-only" {{if ne $p.RenderMode "standalone"}}checked{{end}}>
+                            <div class="border-2 border-slate-200 rounded-lg p-3 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-slate-300 transition-colors">
+                                <div class="font-medium text-sm text-slate-900">🎨 嵌入到网站</div>
+                                <div class="text-xs text-slate-500 mt-1">页面包含网站导航/页脚，适合普通图文内容（Markdown/HTML 片段）</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="render_mode" value="standalone" x-model="renderMode" class="peer sr-only" {{if eq $p.RenderMode "standalone"}}checked{{end}}>
+                            <div class="border-2 border-slate-200 rounded-lg p-3 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:border-slate-300 transition-colors">
+                                <div class="font-medium text-sm text-slate-900">📦 独立 HTML 页面</div>
+                                <div class="text-xs text-slate-500 mt-1">完整 HTML 文档，原样输出（不带导航/页脚），适合落地页、表单页</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <div>
-                    <div class="flex items-center justify-between">
-                        <label class="form-label">内容</label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="form-label !mb-0">内容</label>
                         <div class="flex items-center gap-2">
-                            <select name="content_type" class="form-input w-auto bg-white py-1.5 text-sm"><option value="markdown" {{if eq $p.ContentType "markdown"}}selected{{end}}>Markdown</option><option value="html" {{if eq $p.ContentType "html"}}selected{{end}}>HTML</option></select>
+                            <label class="text-xs text-indigo-600 hover:text-indigo-800 cursor-pointer">
+                                📂 从 HTML 文件加载
+                                <input type="file" accept=".html,.htm" @change="loadHTMLFile($event)" class="hidden">
+                            </label>
+                            <select name="content_type" x-model="contentType" class="form-input w-auto bg-white py-1.5 text-sm">
+                                <option value="markdown" {{if eq $p.ContentType "markdown"}}selected{{end}}>Markdown</option>
+                                <option value="html" {{if eq $p.ContentType "html"}}selected{{end}}>HTML</option>
+                            </select>
                         </div>
                     </div>
-                    <textarea name="content" rows="16" class="form-input font-mono text-sm">{{$p.Content}}</textarea>
+                    <textarea name="content" rows="18" class="form-input font-mono text-xs leading-relaxed" x-ref="content" placeholder="独立 HTML 模式可粘贴完整 <!DOCTYPE html>...</html> 文档">{{$p.Content}}</textarea>
+                    <p x-show="renderMode === 'standalone' && contentType !== 'html'" x-cloak class="text-xs text-amber-600 mt-1">⚠️ 独立 HTML 模式建议把内容类型改为 HTML</p>
                 </div>
+
                 <div class="flex items-center gap-4">
                     <label class="flex items-center gap-2"><input type="checkbox" name="is_published" value="1" {{if eq $p.IsPublished 1}}checked{{end}} class="w-4 h-4 text-indigo-600"> 发布</label>
                     <button type="submit" class="btn-primary">{{if $p.ID}}保存更改{{else}}创建页面{{end}}</button>
@@ -44,6 +74,7 @@
                 <th>标题</th>
                 <th class="w-32">链接</th>
                 <th class="w-20">类型</th>
+                <th class="w-20">模式</th>
                 <th class="w-20">状态</th>
                 <th class="w-24">创建时间</th>
                 <th class="w-24">操作</th>
@@ -54,6 +85,7 @@
                     <td class="font-medium text-slate-900">{{$p.Title}}</td>
                     <td><a href="/page/{{$p.Slug}}" target="_blank" class="text-indigo-600 hover:text-indigo-800 text-xs font-mono">/page/{{$p.Slug}}</a></td>
                     <td><span class="badge {{if eq $p.ContentType "markdown"}}badge-blue{{else}}badge-purple{{end}}">{{$p.ContentType}}</span></td>
+                    <td><span class="badge {{if eq $p.RenderMode "standalone"}}badge-yellow{{else}}badge-gray{{end}}">{{if eq $p.RenderMode "standalone"}}独立{{else}}嵌入{{end}}</span></td>
                     <td><span class="badge {{if eq $p.IsPublished 1}}badge-green{{else}}badge-yellow{{end}}">{{if eq $p.IsPublished 1}}已发布{{else}}草稿{{end}}</span></td>
                     <td class="text-slate-400 text-xs whitespace-nowrap">{{formatDate $p.CreatedAt}}</td>
                     <td>
@@ -64,10 +96,36 @@
                     </td>
                 </tr>
                 {{else}}
-                <tr><td colspan="6" class="text-center text-slate-400 py-8">暂无页面</td></tr>
+                <tr><td colspan="7" class="text-center text-slate-400 py-8">暂无页面</td></tr>
                 {{end}}
             </tbody>
         </table>
     </div>
 </div>
+<script>
+function pageEditor() {
+    return {
+        renderMode: '{{if eq $p.RenderMode "standalone"}}standalone{{else}}embed{{end}}',
+        contentType: '{{if eq $p.ContentType "html"}}html{{else}}markdown{{end}}',
+        loadHTMLFile(ev) {
+            var file = ev.target.files && ev.target.files[0];
+            if (!file) return;
+            var self = this;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                self.$refs.content.value = e.target.result;
+                // Auto-detect: if file contains <!DOCTYPE> or <html>, switch to standalone HTML
+                var text = e.target.result.toLowerCase();
+                if (text.indexOf('<!doctype') >= 0 || text.indexOf('<html') >= 0) {
+                    self.contentType = 'html';
+                    self.renderMode = 'standalone';
+                } else {
+                    self.contentType = 'html';
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+}
+</script>
 {{end}}

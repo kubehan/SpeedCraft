@@ -794,13 +794,14 @@ type Page struct {
 	Slug        string    `json:"slug"`
 	Content     string    `json:"content"`
 	ContentType string    `json:"content_type"`
+	RenderMode  string    `json:"render_mode"`
 	IsPublished int       `json:"is_published"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func GetAllPages() ([]Page, error) {
-	rows, err := database.DB.Query("SELECT id, title, slug, content, content_type, is_published, created_at, updated_at FROM pages ORDER BY created_at DESC")
+	rows, err := database.DB.Query("SELECT id, title, slug, content, content_type, COALESCE(render_mode,'embed'), is_published, created_at, updated_at FROM pages ORDER BY created_at DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -808,14 +809,14 @@ func GetAllPages() ([]Page, error) {
 	var list []Page
 	for rows.Next() {
 		var p Page
-		rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Content, &p.ContentType, &p.IsPublished, &p.CreatedAt, &p.UpdatedAt)
+		rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Content, &p.ContentType, &p.RenderMode, &p.IsPublished, &p.CreatedAt, &p.UpdatedAt)
 		list = append(list, p)
 	}
 	return list, nil
 }
 
 func GetPublishedPages() ([]Page, error) {
-	rows, err := database.DB.Query("SELECT id, title, slug, content, content_type, is_published, created_at, updated_at FROM pages WHERE is_published=1 ORDER BY created_at DESC")
+	rows, err := database.DB.Query("SELECT id, title, slug, content, content_type, COALESCE(render_mode,'embed'), is_published, created_at, updated_at FROM pages WHERE is_published=1 ORDER BY created_at DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -823,7 +824,7 @@ func GetPublishedPages() ([]Page, error) {
 	var list []Page
 	for rows.Next() {
 		var p Page
-		rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Content, &p.ContentType, &p.IsPublished, &p.CreatedAt, &p.UpdatedAt)
+		rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Content, &p.ContentType, &p.RenderMode, &p.IsPublished, &p.CreatedAt, &p.UpdatedAt)
 		list = append(list, p)
 	}
 	return list, nil
@@ -831,8 +832,8 @@ func GetPublishedPages() ([]Page, error) {
 
 func GetPageBySlug(slug string) (*Page, error) {
 	var p Page
-	err := database.DB.QueryRow("SELECT id, title, slug, content, content_type, is_published, created_at, updated_at FROM pages WHERE slug=? AND is_published=1", slug).
-		Scan(&p.ID, &p.Title, &p.Slug, &p.Content, &p.ContentType, &p.IsPublished, &p.CreatedAt, &p.UpdatedAt)
+	err := database.DB.QueryRow("SELECT id, title, slug, content, content_type, COALESCE(render_mode,'embed'), is_published, created_at, updated_at FROM pages WHERE slug=? AND is_published=1", slug).
+		Scan(&p.ID, &p.Title, &p.Slug, &p.Content, &p.ContentType, &p.RenderMode, &p.IsPublished, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -840,15 +841,18 @@ func GetPageBySlug(slug string) (*Page, error) {
 }
 
 func SavePage(p *Page) (int64, error) {
+	if p.RenderMode == "" {
+		p.RenderMode = "embed"
+	}
 	if p.ID > 0 {
 		_, err := database.DB.Exec(
-			"UPDATE pages SET title=?, slug=?, content=?, content_type=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
-			p.Title, p.Slug, p.Content, p.ContentType, p.IsPublished, p.ID)
+			"UPDATE pages SET title=?, slug=?, content=?, content_type=?, render_mode=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+			p.Title, p.Slug, p.Content, p.ContentType, p.RenderMode, p.IsPublished, p.ID)
 		return p.ID, err
 	}
 	result, err := database.DB.Exec(
-		"INSERT INTO pages (title, slug, content, content_type, is_published) VALUES (?, ?, ?, ?, ?)",
-		p.Title, p.Slug, p.Content, p.ContentType, p.IsPublished)
+		"INSERT INTO pages (title, slug, content, content_type, render_mode, is_published) VALUES (?, ?, ?, ?, ?, ?)",
+		p.Title, p.Slug, p.Content, p.ContentType, p.RenderMode, p.IsPublished)
 	if err != nil {
 		return 0, err
 	}
