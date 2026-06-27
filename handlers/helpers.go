@@ -101,6 +101,90 @@ func InitTemplates() error {
 			}
 			return list
 		},
+		"socialAccounts": func() []models.SocialAccount {
+			list, err := models.GetPublishedSocialAccounts()
+			if err != nil {
+				return []models.SocialAccount{}
+			}
+			return list
+		},
+		"socialPlatforms": func() []map[string]string {
+			return []map[string]string{
+				{"Key": "wechat_official", "Label": "微信公众号", "Icon": "📢", "ShortLabel": "公众号"},
+				{"Key": "wechat_channel", "Label": "微信视频号", "Icon": "🎬", "ShortLabel": "视频号"},
+				{"Key": "wechat_mini", "Label": "微信小程序", "Icon": "🧩", "ShortLabel": "小程序"},
+				{"Key": "wechat_personal", "Label": "微信号", "Icon": "💬", "ShortLabel": "微信"},
+				{"Key": "xiaohongshu", "Label": "小红书", "Icon": "📕", "ShortLabel": "小红书"},
+				{"Key": "douyin", "Label": "抖音", "Icon": "🎵", "ShortLabel": "抖音"},
+				{"Key": "kuaishou", "Label": "快手", "Icon": "⚡", "ShortLabel": "快手"},
+				{"Key": "weibo", "Label": "微博", "Icon": "🐦", "ShortLabel": "微博"},
+				{"Key": "bilibili", "Label": "B站", "Icon": "📺", "ShortLabel": "B站"},
+				{"Key": "zhihu", "Label": "知乎", "Icon": "💡", "ShortLabel": "知乎"},
+				{"Key": "github", "Label": "GitHub", "Icon": "🐙", "ShortLabel": "GitHub"},
+				{"Key": "twitter", "Label": "Twitter / X", "Icon": "🐤", "ShortLabel": "X"},
+				{"Key": "youtube", "Label": "YouTube", "Icon": "▶️", "ShortLabel": "YouTube"},
+				{"Key": "qq_group", "Label": "QQ 群", "Icon": "🐧", "ShortLabel": "QQ群"},
+				{"Key": "telegram", "Label": "Telegram", "Icon": "✈️", "ShortLabel": "TG"},
+				{"Key": "custom", "Label": "自定义", "Icon": "🔗", "ShortLabel": "其他"},
+			}
+		},
+		"platformIcon": func(key string) string {
+			icons := map[string]string{
+				"wechat_official": "📢", "wechat_channel": "🎬", "wechat_mini": "🧩", "wechat_personal": "💬",
+				"xiaohongshu": "📕", "douyin": "🎵", "kuaishou": "⚡", "weibo": "🐦",
+				"bilibili": "📺", "zhihu": "💡", "github": "🐙", "twitter": "🐤",
+				"youtube": "▶️", "qq_group": "🐧", "telegram": "✈️", "custom": "🔗",
+			}
+			if v, ok := icons[key]; ok {
+				return v
+			}
+			return "🔗"
+		},
+		"platformLabel": func(key string) string {
+			labels := map[string]string{
+				"wechat_official": "微信公众号", "wechat_channel": "微信视频号", "wechat_mini": "微信小程序", "wechat_personal": "微信",
+				"xiaohongshu": "小红书", "douyin": "抖音", "kuaishou": "快手", "weibo": "微博",
+				"bilibili": "B站", "zhihu": "知乎", "github": "GitHub", "twitter": "Twitter",
+				"youtube": "YouTube", "qq_group": "QQ群", "telegram": "Telegram", "custom": "自定义",
+			}
+			if v, ok := labels[key]; ok {
+				return v
+			}
+			return key
+		},
+		"linkColor": func(i interface{}) string {
+			// Tasteful palette that works on dark footer backgrounds
+			palette := []string{
+				"#60a5fa", // blue-400
+				"#4ade80", // green-400
+				"#f472b6", // pink-400
+				"#fbbf24", // amber-400
+				"#a78bfa", // violet-400
+				"#22d3ee", // cyan-400
+				"#fb923c", // orange-400
+				"#34d399", // emerald-400
+				"#f87171", // red-400
+				"#c084fc", // purple-400
+				"#facc15", // yellow-400
+				"#2dd4bf", // teal-400
+			}
+			var idx int
+			switch v := i.(type) {
+			case int:
+				idx = v
+			case int64:
+				idx = int(v)
+			case string:
+				// Deterministic hash by string content
+				for _, c := range v {
+					idx += int(c)
+				}
+			}
+			if idx < 0 {
+				idx = -idx
+			}
+			return palette[idx%len(palette)]
+		},
 		"adsBySlot": func(slot string) []models.Ad {
 			ads, err := models.GetActiveAdsBySlot(slot)
 			if err != nil {
@@ -164,6 +248,7 @@ func InitTemplates() error {
 				{Key: "tags", Label: "标签管理", URL: "/admin/tags", Icon: "🏷️"},
 				{Key: "ads", Label: "广告管理", URL: "/admin/ads", Icon: "📢"},
 				{Key: "friendlinks", Label: "友链管理", URL: "/admin/friendlinks", Icon: "🔗"},
+				{Key: "social", Label: "社交账号", URL: "/admin/social", Icon: "📱"},
 				{Key: "settings", Label: "站点设置", URL: "/admin/settings", Icon: "⚙️"},
 				{Key: "messages", Label: "留言管理", URL: "/admin/messages", Icon: "💬"},
 				{Key: "upload", Label: "文件上传", URL: "/admin/upload", Icon: "📎"},

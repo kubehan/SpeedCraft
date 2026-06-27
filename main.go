@@ -121,6 +121,10 @@ func main() {
 	mux.HandleFunc("/admin/friendlinks/save", handlers.AdminFriendLinkSave(cfg))
 	mux.HandleFunc("/admin/friendlinks/action", handlers.AdminFriendLinkAction(cfg))
 
+	mux.HandleFunc("/admin/social", handlers.AdminSocialAccounts(cfg))
+	mux.HandleFunc("/admin/social/save", handlers.AdminSocialSave(cfg))
+	mux.HandleFunc("/admin/social/delete", handlers.AdminSocialDelete(cfg))
+
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	handler := withMiddleware(mux)

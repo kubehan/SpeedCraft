@@ -1082,3 +1082,79 @@ func BatchAction(table, action string, ids []int64) error {
 	_, err := database.DB.Exec(query, args...)
 	return err
 }
+
+// -------- SocialAccount --------
+type SocialAccount struct {
+	ID          int64     `json:"id"`
+	Platform    string    `json:"platform"`    // wechat_official / wechat_channel / xiaohongshu / douyin / kuaishou / wechat_mini / weibo / bilibili / github / twitter / youtube / custom
+	Name        string    `json:"name"`        // 显示名称（如「速创社官方」）
+	Identifier  string    `json:"identifier"`  // 平台 ID / 账号 / 微信号
+	URL         string    `json:"url"`         // 跳转链接（可选）
+	QRURL       string    `json:"qr_url"`      // 二维码图片（可选）
+	Description string    `json:"description"` // 简介
+	SortOrder   int       `json:"sort_order"`
+	IsPublished int       `json:"is_published"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func GetAllSocialAccounts() ([]SocialAccount, error) {
+	rows, err := database.DB.Query("SELECT id, platform, name, identifier, url, qr_url, description, sort_order, is_published, created_at, updated_at FROM social_accounts ORDER BY sort_order ASC, id ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []SocialAccount
+	for rows.Next() {
+		var s SocialAccount
+		rows.Scan(&s.ID, &s.Platform, &s.Name, &s.Identifier, &s.URL, &s.QRURL, &s.Description, &s.SortOrder, &s.IsPublished, &s.CreatedAt, &s.UpdatedAt)
+		list = append(list, s)
+	}
+	return list, nil
+}
+
+func GetPublishedSocialAccounts() ([]SocialAccount, error) {
+	rows, err := database.DB.Query("SELECT id, platform, name, identifier, url, qr_url, description, sort_order, is_published, created_at, updated_at FROM social_accounts WHERE is_published=1 ORDER BY sort_order ASC, id ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []SocialAccount
+	for rows.Next() {
+		var s SocialAccount
+		rows.Scan(&s.ID, &s.Platform, &s.Name, &s.Identifier, &s.URL, &s.QRURL, &s.Description, &s.SortOrder, &s.IsPublished, &s.CreatedAt, &s.UpdatedAt)
+		list = append(list, s)
+	}
+	return list, nil
+}
+
+func GetSocialAccountByID(id int64) (*SocialAccount, error) {
+	var s SocialAccount
+	err := database.DB.QueryRow("SELECT id, platform, name, identifier, url, qr_url, description, sort_order, is_published, created_at, updated_at FROM social_accounts WHERE id=?", id).
+		Scan(&s.ID, &s.Platform, &s.Name, &s.Identifier, &s.URL, &s.QRURL, &s.Description, &s.SortOrder, &s.IsPublished, &s.CreatedAt, &s.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func SaveSocialAccount(s *SocialAccount) (int64, error) {
+	if s.ID > 0 {
+		_, err := database.DB.Exec(
+			`UPDATE social_accounts SET platform=?, name=?, identifier=?, url=?, qr_url=?, description=?, sort_order=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+			s.Platform, s.Name, s.Identifier, s.URL, s.QRURL, s.Description, s.SortOrder, s.IsPublished, s.ID)
+		return s.ID, err
+	}
+	result, err := database.DB.Exec(
+		`INSERT INTO social_accounts (platform, name, identifier, url, qr_url, description, sort_order, is_published) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		s.Platform, s.Name, s.Identifier, s.URL, s.QRURL, s.Description, s.SortOrder, s.IsPublished)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func DeleteSocialAccount(id int64) error {
+	_, err := database.DB.Exec("DELETE FROM social_accounts WHERE id=?", id)
+	return err
+}

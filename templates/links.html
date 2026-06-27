@@ -20,18 +20,20 @@
         </div>
         {{else}}
         <div class="reveal-stagger grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {{range $link := .Data}}
-            <a href="{{$link.URL}}" target="_blank" rel="noopener" class="card p-5 group block">
+            {{range $i, $link := .Data}}
+            {{$c := linkColor $i}}
+            <a href="{{$link.URL}}" target="_blank" rel="noopener" class="card p-5 group block relative overflow-hidden" style="--link-color: {{$c}};">
+                <div class="absolute top-0 left-0 right-0 h-1 transition-all group-hover:h-1.5" style="background: {{$c}};"></div>
                 <div class="flex items-start gap-3">
                     {{if $link.LogoURL}}
                     <img src="{{$link.LogoURL}}" alt="{{$link.Name}}" class="w-10 h-10 rounded object-cover flex-shrink-0 border border-gray-200" loading="lazy">
                     {{else}}
-                    <div class="w-10 h-10 rounded bg-primary-soft text-primary-soft flex items-center justify-center text-lg flex-shrink-0">🔗</div>
+                    <div class="w-10 h-10 rounded flex items-center justify-center text-lg flex-shrink-0 text-white font-bold" style="background: {{$c}};">{{slice $link.Name 1}}</div>
                     {{end}}
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-gray-900 group-hover:text-primary transition-colors truncate">{{$link.Name}}</h3>
+                        <h3 class="font-semibold text-gray-900 transition-colors truncate" style="color: {{$c}};">{{$link.Name}}</h3>
                         {{if $link.Description}}<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{$link.Description}}</p>{{end}}
-                        {{if $link.Category}}<span class="inline-block mt-2 px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] rounded">{{$link.Category}}</span>{{end}}
+                        {{if $link.Category}}<span class="inline-block mt-2 px-1.5 py-0.5 text-[10px] rounded" style="background: color-mix(in srgb, {{$c}} 15%, white); color: {{$c}};">{{$link.Category}}</span>{{end}}
                     </div>
                 </div>
             </a>

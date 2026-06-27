@@ -1161,3 +1161,66 @@ func ApplyFriendLink(cfg *config.Config) http.HandlerFunc {
 		respondJSON(w, http.StatusOK, map[string]interface{}{"success": true, "message": "申请已提交，等待审核"})
 	}
 }
+
+// -------- SocialAccount Admin --------
+func AdminSocialAccounts(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		list, _ := models.GetAllSocialAccounts()
+		if list == nil {
+			list = []models.SocialAccount{}
+		}
+		var editItem models.SocialAccount
+		if idStr := r.URL.Query().Get("id"); idStr != "" {
+			if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+				if s, err := models.GetSocialAccountByID(id); err == nil && s != nil {
+					editItem = *s
+				}
+			}
+		}
+		render(w, r, "admin/social.html", PageData{
+			Title:   "社交账号 · " + cfg.SiteName,
+			Site:    cfg,
+			Current: "social",
+			Data:    map[string]interface{}{"items": list, "edit": editItem},
+		})
+	})
+}
+
+func AdminSocialSave(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
+		sortOrder, _ := strconv.Atoi(r.FormValue("sort_order"))
+		published := 0
+		if r.FormValue("is_published") == "1" {
+			published = 1
+		}
+		s := &models.SocialAccount{
+			ID:          id,
+			Platform:    r.FormValue("platform"),
+			Name:        r.FormValue("name"),
+			Identifier:  r.FormValue("identifier"),
+			URL:         r.FormValue("url"),
+			QRURL:       r.FormValue("qr_url"),
+			Description: r.FormValue("description"),
+			SortOrder:   sortOrder,
+			IsPublished: published,
+		}
+		if _, err := models.SaveSocialAccount(s); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/admin/social", http.StatusSeeOther)
+	})
+}
+
+func AdminSocialDelete(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+		models.DeleteSocialAccount(id)
+		http.Redirect(w, r, "/admin/social", http.StatusSeeOther)
+	})
+}

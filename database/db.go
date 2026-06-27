@@ -185,6 +185,19 @@ func migrate() error {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS social_accounts (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			platform TEXT NOT NULL,
+			name TEXT NOT NULL,
+			identifier TEXT DEFAULT '',
+			url TEXT DEFAULT '',
+			qr_url TEXT DEFAULT '',
+			description TEXT DEFAULT '',
+			sort_order INTEGER DEFAULT 0,
+			is_published INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 	}
 
 	for _, q := range tables {
