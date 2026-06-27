@@ -340,7 +340,13 @@ func InitTemplates() error {
 		"sub": func(a, b int) int { return a - b },
 		"trim": func(s string) string { return strings.TrimSpace(s) },
 		"trimPrefix": func(s, prefix string) string { return strings.TrimPrefix(s, prefix) },
-		"div": func(a, b int64) int64 { return a / b },
+		"div": func(a, b int64) int64 {
+			if b == 0 {
+				return 0
+			}
+			return a / b
+		},
+		"mul": func(a, b int64) int64 { return a * b },
 		"split": func(s, sep string) []string { return strings.Split(s, sep) },
 		"dict": func(values ...interface{}) map[string]interface{} {
 			d := make(map[string]interface{})

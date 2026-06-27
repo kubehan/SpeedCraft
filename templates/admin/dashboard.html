@@ -4,25 +4,138 @@
 <div>
     <div class="mb-6">
         <h1 class="text-xl font-bold text-slate-900">仪表盘</h1>
-        <p class="text-sm text-slate-500 mt-0.5">站点内容总览</p>
+        <p class="text-sm text-slate-500 mt-0.5">站点访问统计 · 内容总览</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <!-- 访问统计核心指标 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">👁️</div>
+                <span class="text-xs text-slate-400">总访问</span>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">{{$d.totalViews}}</div>
+            <div class="text-sm text-slate-500 mt-0.5">累计页面浏览</div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg">📈</div>
+                <span class="text-xs text-slate-400">今日</span>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">{{$d.todayViews}}</div>
+            <div class="text-sm text-slate-500 mt-0.5">今日页面浏览</div>
+        </div>
         <div class="stat-card">
             <div class="flex items-center justify-between mb-3">
                 <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-lg">💬</div>
-                <span class="text-xs text-slate-400">全部</span>
+                <span class="text-xs text-slate-400">留言</span>
             </div>
             <div class="text-2xl font-bold text-slate-900">{{$d.totalMessages}}</div>
-            <div class="text-sm text-slate-500 mt-0.5">{{$d.pendingMessages}} 条待处理</div>
+            <div class="text-sm text-slate-500 mt-0.5">{{$d.pendingMessages}} 待处理</div>
         </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-lg">🔗</div>
+                <span class="text-xs text-slate-400">友链</span>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">{{$d.pendingFriendLinks}}</div>
+            <div class="text-sm text-slate-500 mt-0.5">待审核申请</div>
+        </div>
+    </div>
+
+    <!-- 7 日趋势 + Top 页面 -->
+    <div class="grid lg:grid-cols-3 gap-4 mb-6">
+        <div class="stat-card lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-slate-900 text-sm">📊 近 7 天访问趋势</h3>
+                <span class="text-xs text-slate-400">页面浏览量</span>
+            </div>
+            {{if $d.dailyTrend}}
+            {{$max := 1}}
+            {{range $d.dailyTrend}}{{if gt .Count $max}}{{$max = .Count}}{{end}}{{end}}
+            <div class="flex items-end gap-2 h-32 mt-2">
+                {{range $d.dailyTrend}}
+                {{$pct := 0}}{{if gt $max 0}}{{$pct = (div (mul .Count 100) $max)}}{{end}}
+                <div class="flex-1 flex flex-col items-center gap-1.5">
+                    <div class="text-[10px] text-slate-500 font-medium">{{.Count}}</div>
+                    <div class="w-full rounded-t transition-all hover:opacity-80" style="height: {{$pct}}%; min-height: 4px; background: linear-gradient(180deg, var(--color-primary, #6366f1), color-mix(in srgb, var(--color-primary, #6366f1) 60%, white));"></div>
+                    <div class="text-[10px] text-slate-400">{{.Day}}</div>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <p class="text-center text-slate-400 text-sm py-8">暂无访问数据</p>
+            {{end}}
+        </div>
+
+        <div class="stat-card">
+            <h3 class="font-semibold text-slate-900 text-sm mb-4">🏆 热门页面 TOP 8</h3>
+            {{if $d.topPages}}
+            <div class="space-y-2">
+                {{range $d.topPages}}
+                <div class="flex items-center justify-between text-sm">
+                    <span class="truncate text-slate-700 font-mono text-xs" title="{{.Path}}">{{.Path}}</span>
+                    <span class="text-slate-900 font-semibold ml-2 flex-shrink-0">{{.ViewCount}}</span>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <p class="text-center text-slate-400 text-sm py-6">暂无数据</p>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- 性能监控 -->
+    <div class="stat-card mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-slate-900 text-sm">⚡ 响应性能 (按平均响应时间排序)</h3>
+            <span class="text-xs text-slate-400">仅显示访问 ≥ 5 次的页面</span>
+        </div>
+        {{if $d.slowestPages}}
+        <table class="data-table">
+            <thead><tr>
+                <th>路径</th>
+                <th class="w-20">访问</th>
+                <th class="w-24">平均耗时</th>
+                <th class="w-20">最大</th>
+                <th class="w-20">最小</th>
+                <th class="w-20">错误</th>
+                <th class="w-32">最近访问</th>
+            </tr></thead>
+            <tbody>
+                {{range $d.slowestPages}}
+                {{$avg := .AvgDurationMs}}
+                <tr>
+                    <td class="font-mono text-xs text-slate-700">{{.Path}}</td>
+                    <td class="text-slate-600 text-sm">{{.ViewCount}}</td>
+                    <td>
+                        <span class="badge {{if gt $avg 500}}badge-yellow{{else if gt $avg 200}}badge-blue{{else}}badge-green{{end}}">{{$avg}} ms</span>
+                    </td>
+                    <td class="text-slate-500 text-xs">{{.MaxDurationMs}} ms</td>
+                    <td class="text-slate-500 text-xs">{{.MinDurationMs}} ms</td>
+                    <td class="text-slate-500 text-xs">
+                        {{if gt .ErrorCount 0}}<span class="text-red-500 font-medium">{{.ErrorCount}}</span>{{else}}0{{end}}
+                    </td>
+                    <td class="text-slate-400 text-xs whitespace-nowrap">{{if .LastVisited.Valid}}{{formatDateTime .LastVisited.Time}}{{end}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{else}}
+        <p class="text-center text-slate-400 text-sm py-6">访问量不足，暂无性能统计</p>
+        {{end}}
+    </div>
+
+    <!-- 内容总览 -->
+    <h3 class="font-semibold text-slate-900 text-sm mb-3">内容总览</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="stat-card">
             <div class="flex items-center justify-between mb-3">
                 <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">🔧</div>
                 <span class="text-xs text-slate-400">{{add $d.pubServices $d.privServices}} 项</span>
             </div>
             <div class="text-2xl font-bold text-slate-900">{{$d.pubServices}}</div>
-            <div class="text-sm text-slate-500 mt-0.5"><span class="text-slate-400">{{$d.privServices}} 项未发布</span></div>
+            <div class="text-sm text-slate-500 mt-0.5">服务 · {{$d.privServices}} 未发布</div>
         </div>
         <div class="stat-card">
             <div class="flex items-center justify-between mb-3">
@@ -30,7 +143,15 @@
                 <span class="text-xs text-slate-400">{{add $d.pubPosts $d.privPosts}} 篇</span>
             </div>
             <div class="text-2xl font-bold text-slate-900">{{$d.pubPosts}}</div>
-            <div class="text-sm text-slate-500 mt-0.5"><span class="text-slate-400">{{$d.privPosts}} 篇草稿</span></div>
+            <div class="text-sm text-slate-500 mt-0.5">文章 · {{$d.privPosts}} 草稿</div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-lg">📁</div>
+                <span class="text-xs text-slate-400">{{add $d.pubProjects $d.privProjects}} 个</span>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">{{$d.pubProjects}}</div>
+            <div class="text-sm text-slate-500 mt-0.5">项目 · {{$d.privProjects}} 未发布</div>
         </div>
         <div class="stat-card">
             <div class="flex items-center justify-between mb-3">
@@ -38,42 +159,35 @@
                 <span class="text-xs text-slate-400">{{add $d.pubOS $d.privOS}} 个</span>
             </div>
             <div class="text-2xl font-bold text-slate-900">{{$d.pubOS}}</div>
-            <div class="text-sm text-slate-500 mt-0.5"><span class="text-slate-400">{{$d.privOS}} 个未发布</span></div>
+            <div class="text-sm text-slate-500 mt-0.5">开源 · {{$d.privOS}} 未发布</div>
         </div>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-4">
-        <a href="/admin/services" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl flex-shrink-0">🔧</div>
-            <div><div class="font-medium text-slate-900">服务管理</div><div class="text-sm text-slate-500">配置和管理展示服务</div></div>
+    <h3 class="font-semibold text-slate-900 text-sm mb-3">快捷入口</h3>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a href="/admin/messages" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-cyan-100 text-cyan-600 flex items-center justify-center text-xl flex-shrink-0">💬</div>
+            <div><div class="font-medium text-slate-900">留言管理</div><div class="text-sm text-slate-500">查看客户咨询</div></div>
+        </a>
+        <a href="/admin/friendlinks" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl flex-shrink-0">🔗</div>
+            <div><div class="font-medium text-slate-900">友链审核</div><div class="text-sm text-slate-500">{{$d.pendingFriendLinks}} 条待审核</div></div>
         </a>
         <a href="/admin/posts" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
             <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl flex-shrink-0">📝</div>
-            <div><div class="font-medium text-slate-900">文章管理</div><div class="text-sm text-slate-500">创建和编辑博客文章</div></div>
-        </a>
-        <a href="/admin/projects" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xl flex-shrink-0">📁</div>
-            <div><div class="font-medium text-slate-900">项目管理</div><div class="text-sm text-slate-500">管理案例项目</div></div>
-        </a>
-        <a href="/admin/opensource" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xl flex-shrink-0">⭐</div>
-            <div><div class="font-medium text-slate-900">开源项目</div><div class="text-sm text-slate-500">管理开源项目展示</div></div>
-        </a>
-        <a href="/admin/navigation" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xl flex-shrink-0">🗺️</div>
-            <div><div class="font-medium text-slate-900">导航管理</div><div class="text-sm text-slate-500">配置网站导航栏</div></div>
-        </a>
-        <a href="/admin/skills" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xl flex-shrink-0">🎯</div>
-            <div><div class="font-medium text-slate-900">技能管理</div><div class="text-sm text-slate-500">管理技术栈展示</div></div>
+            <div><div class="font-medium text-slate-900">文章管理</div><div class="text-sm text-slate-500">创建和编辑博客</div></div>
         </a>
         <a href="/admin/settings" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
             <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xl flex-shrink-0">⚙️</div>
-            <div><div class="font-medium text-slate-900">站点设置</div><div class="text-sm text-slate-500">配置站点信息和展示文案</div></div>
+            <div><div class="font-medium text-slate-900">站点设置</div><div class="text-sm text-slate-500">通知配置在此</div></div>
         </a>
-        <a href="/admin/messages" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div class="w-10 h-10 rounded-lg bg-cyan-100 text-cyan-600 flex items-center justify-center text-xl flex-shrink-0">💬</div>
-            <div><div class="font-medium text-slate-900">留言管理</div><div class="text-sm text-slate-500">查看和处理客户咨询</div></div>
+        <a href="/admin/ads" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center text-xl flex-shrink-0">📢</div>
+            <div><div class="font-medium text-slate-900">广告管理</div><div class="text-sm text-slate-500">配置广告位</div></div>
+        </a>
+        <a href="/admin/social" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xl flex-shrink-0">📱</div>
+            <div><div class="font-medium text-slate-900">社交账号</div><div class="text-sm text-slate-500">公众号/视频号等</div></div>
         </a>
     </div>
 </div>

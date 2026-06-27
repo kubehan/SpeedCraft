@@ -58,21 +58,35 @@ func AdminDashboardStats(cfg *config.Config) http.HandlerFunc {
 			}
 		}
 
+		// Page analytics
+		topPages, _ := models.GetTopPageStats(8)
+		slowestPages, _ := models.GetSlowestPages(5)
+		totalViews := models.GetTotalPageViews()
+		todayViews := models.GetTodayPageViews()
+		dailyTrend, _ := models.GetRecentDailyViews(7)
+		pendingFriendLinks := models.GetPendingFriendLinksCount()
+
 		render(w, r, "admin/dashboard.html", PageData{
 			Title:   "管理后台 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "dashboard",
 			Data: map[string]interface{}{
-				"totalMessages":   total,
-				"pendingMessages": pending,
-				"pubServices":     pubServices,
-				"privServices":    privServices,
-				"pubPosts":        pubPosts,
-				"privPosts":       privPosts,
-				"pubProjects":     pubProjects,
-				"privProjects":    privProjects,
-				"pubOS":           pubOS,
-				"privOS":          privOS,
+				"totalMessages":      total,
+				"pendingMessages":    pending,
+				"pubServices":        pubServices,
+				"privServices":       privServices,
+				"pubPosts":           pubPosts,
+				"privPosts":          privPosts,
+				"pubProjects":        pubProjects,
+				"privProjects":       privProjects,
+				"pubOS":              pubOS,
+				"privOS":             privOS,
+				"totalViews":         totalViews,
+				"todayViews":         todayViews,
+				"topPages":           topPages,
+				"slowestPages":       slowestPages,
+				"dailyTrend":         dailyTrend,
+				"pendingFriendLinks": pendingFriendLinks,
 			},
 		})
 	})
@@ -1158,6 +1172,13 @@ func ApplyFriendLink(cfg *config.Config) http.HandlerFunc {
 			respondJSON(w, http.StatusInternalServerError, map[string]interface{}{"success": false, "error": "提交失败"})
 			return
 		}
+
+		// Notify admin asynchronously
+		go SendGenericNotification("🔗 新友链申请", fmt.Sprintf(
+			"📌 站点: %s\n🌐 链接: %s\n📂 分类: %s\n📝 简介: %s\n📧 提交者: %s\n💬 备注: %s\n\n请到后台 /admin/friendlinks 审核",
+			f.Name, f.URL, f.Category, f.Description, f.SubmitterEmail, f.SubmitterNote,
+		))
+
 		respondJSON(w, http.StatusOK, map[string]interface{}{"success": true, "message": "申请已提交，等待审核"})
 	}
 }

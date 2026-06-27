@@ -198,6 +198,24 @@ func migrate() error {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS page_views (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			path TEXT UNIQUE NOT NULL,
+			view_count INTEGER DEFAULT 0,
+			total_duration_ms INTEGER DEFAULT 0,
+			max_duration_ms INTEGER DEFAULT 0,
+			min_duration_ms INTEGER DEFAULT 0,
+			error_count INTEGER DEFAULT 0,
+			last_visited DATETIME,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS page_view_daily (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			path TEXT NOT NULL,
+			day TEXT NOT NULL,
+			view_count INTEGER DEFAULT 0,
+			UNIQUE(path, day)
+		)`,
 	}
 
 	for _, q := range tables {

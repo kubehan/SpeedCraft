@@ -127,7 +127,7 @@ func main() {
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	handler := withMiddleware(mux)
+	handler := withMiddleware(handlers.AnalyticsMiddleware(mux))
 
 	addr := ":" + cfg.Port
 	log.Printf("[INFO] 🚀 %s 服务启动于 http://localhost%s", cfg.SiteName, addr)

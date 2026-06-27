@@ -1158,3 +1158,137 @@ func DeleteSocialAccount(id int64) error {
 	_, err := database.DB.Exec("DELETE FROM social_accounts WHERE id=?", id)
 	return err
 }
+
+// -------- Page Analytics --------
+type PageStat struct {
+	ID              int64     `json:"id"`
+	Path            string    `json:"path"`
+	ViewCount       int64     `json:"view_count"`
+	TotalDurationMs int64     `json:"total_duration_ms"`
+	MaxDurationMs   int64     `json:"max_duration_ms"`
+	MinDurationMs   int64     `json:"min_duration_ms"`
+	ErrorCount      int64     `json:"error_count"`
+	LastVisited     sql.NullTime `json:"last_visited"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+// AvgDurationMs returns average response time in ms (0 if no views).
+func (p PageStat) AvgDurationMs() int64 {
+	if p.ViewCount == 0 {
+		return 0
+	}
+	return p.TotalDurationMs / p.ViewCount
+}
+
+// RecordPageView atomically increments view count + accumulates timing stats.
+// durationMs is the request duration in milliseconds. statusCode != 200 counts as error.
+func RecordPageView(path string, durationMs int64, statusCode int) error {
+	errCount := 0
+	if statusCode >= 400 {
+		errCount = 1
+	}
+	// Upsert daily stats
+	_, _ = database.DB.Exec(
+		`INSERT INTO page_view_daily (path, day, view_count) VALUES (?, date('now'), 1)
+		 ON CONFLICT(path, day) DO UPDATE SET view_count = view_count + 1`,
+		path,
+	)
+	// Upsert aggregate stats
+	_, err := database.DB.Exec(
+		`INSERT INTO page_views (path, view_count, total_duration_ms, max_duration_ms, min_duration_ms, error_count, last_visited)
+		 VALUES (?, 1, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+		 ON CONFLICT(path) DO UPDATE SET
+		   view_count = view_count + 1,
+		   total_duration_ms = total_duration_ms + ?,
+		   max_duration_ms = CASE WHEN ? > max_duration_ms THEN ? ELSE max_duration_ms END,
+		   min_duration_ms = CASE WHEN min_duration_ms = 0 OR ? < min_duration_ms THEN ? ELSE min_duration_ms END,
+		   error_count = error_count + ?,
+		   last_visited = CURRENT_TIMESTAMP`,
+		path, durationMs, durationMs, durationMs, errCount,
+		durationMs, durationMs, durationMs, durationMs, durationMs, errCount,
+	)
+	return err
+}
+
+// GetTopPageStats returns top N pages by view count.
+func GetTopPageStats(limit int) ([]PageStat, error) {
+	rows, err := database.DB.Query(
+		`SELECT id, path, view_count, total_duration_ms, max_duration_ms, min_duration_ms, error_count, last_visited, created_at
+		 FROM page_views ORDER BY view_count DESC LIMIT ?`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []PageStat
+	for rows.Next() {
+		var p PageStat
+		rows.Scan(&p.ID, &p.Path, &p.ViewCount, &p.TotalDurationMs, &p.MaxDurationMs, &p.MinDurationMs, &p.ErrorCount, &p.LastVisited, &p.CreatedAt)
+		list = append(list, p)
+	}
+	return list, nil
+}
+
+// GetAllPageStats returns all page stats ordered by view count.
+func GetAllPageStats() ([]PageStat, error) {
+	return GetTopPageStats(1000)
+}
+
+// GetTotalPageViews returns the sum of all view counts.
+func GetTotalPageViews() int64 {
+	var total int64
+	database.DB.QueryRow("SELECT COALESCE(SUM(view_count), 0) FROM page_views").Scan(&total)
+	return total
+}
+
+// GetTodayPageViews returns today's total view count.
+func GetTodayPageViews() int64 {
+	var total int64
+	database.DB.QueryRow("SELECT COALESCE(SUM(view_count), 0) FROM page_view_daily WHERE day = date('now')").Scan(&total)
+	return total
+}
+
+// GetRecentDailyViews returns the last N days of total page views as [{day, count}, ...].
+type DailyView struct {
+	Day   string `json:"day"`
+	Count int64  `json:"count"`
+}
+
+func GetRecentDailyViews(days int) ([]DailyView, error) {
+	rows, err := database.DB.Query(
+		`SELECT day, COALESCE(SUM(view_count), 0) as c FROM page_view_daily
+		 WHERE day >= date('now', ?)
+		 GROUP BY day ORDER BY day ASC`,
+		fmt.Sprintf("-%d days", days),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []DailyView
+	for rows.Next() {
+		var d DailyView
+		rows.Scan(&d.Day, &d.Count)
+		list = append(list, d)
+	}
+	return list, nil
+}
+
+// GetSlowestPages returns top N pages by average response time (only pages with >= 5 views).
+func GetSlowestPages(limit int) ([]PageStat, error) {
+	rows, err := database.DB.Query(
+		`SELECT id, path, view_count, total_duration_ms, max_duration_ms, min_duration_ms, error_count, last_visited, created_at
+		 FROM page_views
+		 WHERE view_count >= 5
+		 ORDER BY (total_duration_ms / view_count) DESC LIMIT ?`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []PageStat
+	for rows.Next() {
+		var p PageStat
+		rows.Scan(&p.ID, &p.Path, &p.ViewCount, &p.TotalDurationMs, &p.MaxDurationMs, &p.MinDurationMs, &p.ErrorCount, &p.LastVisited, &p.CreatedAt)
+		list = append(list, p)
+	}
+	return list, nil
+}

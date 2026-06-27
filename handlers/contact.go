@@ -101,6 +101,41 @@ func sendWechatWebhook(webhook string, req models.MessageRequest) {
 	http.Post(webhook, "application/json", bytes.NewReader(body))
 }
 
+// SendGenericNotification sends a notification through configured channels (webhook + email)
+// with a generic title and content. Used for non-message events like friend link applications.
+func SendGenericNotification(title, content string) {
+	webhook := models.GetSetting("wechat_webhook")
+	notifyEmail := models.GetSetting("notify_email")
+
+	if webhook != "" {
+		body, _ := json.Marshal(map[string]interface{}{
+			"msgtype": "markdown",
+			"markdown": map[string]string{
+				"content": "=== " + title + " ===\n" + content,
+			},
+		})
+		http.Post(webhook, "application/json", bytes.NewReader(body))
+	}
+
+	if notifyEmail != "" {
+		host := models.GetSetting("smtp_host")
+		port := models.GetSetting("smtp_port")
+		user := models.GetSetting("smtp_user")
+		pass := models.GetSetting("smtp_pass")
+		if host == "" || user == "" {
+			return
+		}
+		subject := "[速创社] " + title
+		msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n%s",
+			user, notifyEmail, subject, content)
+		addr := fmt.Sprintf("%s:%s", host, port)
+		auth := smtp.PlainAuth("", user, pass, host)
+		if err := smtp.SendMail(addr, auth, user, []string{notifyEmail}, []byte(msg)); err != nil {
+			fmt.Printf("[EMAIL] 发送失败: %v\n", err)
+		}
+	}
+}
+
 func sendEmailNotification(to string, req models.MessageRequest) {
 	host := models.GetSetting("smtp_host")
 	port := models.GetSetting("smtp_port")
