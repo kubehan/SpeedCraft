@@ -271,7 +271,7 @@
     <footer class="bg-gray-900 text-gray-300 mt-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-                <div class="md:col-span-4">
+                <div class="md:col-span-5">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="text-2xl">⚡</span>
                         <span class="text-lg font-bold text-white">{{getSetting "site_name"}}</span>
@@ -300,7 +300,7 @@
                     </div>
                     {{end}}
                 </div>
-                <div class="md:col-span-2">
+                <div class="md:col-span-3">
                     <h4 class="text-white font-semibold mb-4 text-sm">快速链接</h4>
                     <ul class="space-y-2 text-sm">
                         <li><a href="/services" class="text-gray-400 hover:text-white transition-colors">服务</a></li>
@@ -309,25 +309,7 @@
                         <li><a href="/about" class="text-gray-400 hover:text-white transition-colors">关于</a></li>
                     </ul>
                 </div>
-                <div class="md:col-span-3">
-                    {{$fls := friendLinks}}
-                    <h4 class="text-white font-semibold mb-4 text-sm">友情链接</h4>
-                    {{if $fls}}
-                    <ul class="space-y-2 text-sm">
-                        {{range $i, $link := $fls}}{{if lt $i 6}}
-                        <li class="truncate"><a href="{{$link.URL}}" target="_blank" rel="noopener" class="text-gray-400 hover:text-white transition-colors" title="{{$link.Name}}{{if $link.Description}} - {{$link.Description}}{{end}}">{{$link.Name}}</a></li>
-                        {{end}}{{end}}
-                        {{if gt (len $fls) 6}}
-                        <li><a href="/links" class="text-gray-500 hover:text-gray-300 text-xs">查看全部 →</a></li>
-                        {{end}}
-                        <li class="pt-1"><a href="/links#apply" class="text-primary hover:underline text-xs">+ 友链申请</a></li>
-                    </ul>
-                    {{else}}
-                    <p class="text-xs text-gray-500">虚位以待</p>
-                    <a href="/links#apply" class="inline-block mt-2 text-primary hover:underline text-xs">+ 友链申请</a>
-                    {{end}}
-                </div>
-                <div class="md:col-span-3">
+                <div class="md:col-span-4">
                     <h4 class="text-white font-semibold mb-4 text-sm">联系方式</h4>
                     <ul class="space-y-2 text-sm text-gray-400">
                         {{$email := getSetting "contact_email"}}
@@ -336,6 +318,34 @@
                         {{if $wechat}}<li>💬 微信: {{$wechat}}</li>{{end}}
                         <li class="pt-2"><a href="/about#contact-form" class="inline-flex items-center gap-1 text-primary hover:underline">在线咨询 →</a></li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- 友情链接 - 行内显示 -->
+            {{$fls := friendLinks}}
+            <div class="mt-10 pt-6 border-t border-gray-800/70">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+                    <span class="text-white font-semibold text-sm flex items-center gap-1.5 mr-1">
+                        <span>🔗</span>
+                        <span>友情链接</span>
+                    </span>
+                    {{if $fls}}
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2 flex-1">
+                        {{range $i, $link := $fls}}{{if lt $i 12}}
+                        <a href="{{$link.URL}}" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-white transition-colors" title="{{$link.Name}}{{if $link.Description}} - {{$link.Description}}{{end}}">{{$link.Name}}</a>
+                        {{if and (lt $i 11) (lt (add $i 1) (len $fls))}}<span class="text-gray-700 text-xs">·</span>{{end}}
+                        {{end}}{{end}}
+                        {{if gt (len $fls) 12}}
+                        <a href="/links" class="text-xs text-gray-500 hover:text-gray-300">更多 →</a>
+                        {{end}}
+                    </div>
+                    {{else}}
+                    <span class="text-sm text-gray-500">虚位以待</span>
+                    {{end}}
+                    <a href="/links#apply" class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-full hover:opacity-90 transition-opacity shadow-md ml-auto">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        申请友链
+                    </a>
                 </div>
             </div>
 
