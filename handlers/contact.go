@@ -14,10 +14,17 @@ import (
 func About(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings, _ := models.GetAllSettings()
+		services, _ := models.GetPublishedServices()
+		if services == nil {
+			services = []models.Service{}
+		}
 		render(w, r, "about.html", PageData{
 			Title:   "关于 · " + models.GetSetting("site_name"),
 			Site:    cfg,
-			Data:    settings,
+			Data: map[string]interface{}{
+				"settings": settings,
+				"services": services,
+			},
 			Current: "about",
 		})
 	}

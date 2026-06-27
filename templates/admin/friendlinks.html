@@ -1,0 +1,152 @@
+{{template "admin_layout" .}}
+{{define "admin_content"}}
+{{$d := .Data}}
+{{$f := $d.edit}}
+<div class="max-w-6xl" x-data="friendLinkEditor()">
+    <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-xl font-bold text-slate-900">友链管理</h1><p class="text-sm text-slate-500 mt-0.5">维护友情链接、审核访客提交的申请</p></div>
+    </div>
+
+    <div class="page-card mb-6">
+        <div class="page-card-header">
+            <span class="text-sm font-medium text-slate-700">{{if $f.ID}}编辑友链{{else}}新建友链{{end}}</span>
+        </div>
+        <div class="page-card-body">
+            <form method="POST" action="/admin/friendlinks/save" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                {{if $f.ID}}<input type="hidden" name="id" value="{{$f.ID}}">{{end}}
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div><label class="form-label">站点名称 *</label><input type="text" name="name" required class="form-input" value="{{$f.Name}}" placeholder="某某博客"></div>
+                    <div><label class="form-label">站点链接 *</label><input type="url" name="url" required class="form-input" value="{{$f.URL}}" placeholder="https://example.com"></div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Logo URL</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="logo-input" name="logo_url" class="form-input flex-1" value="{{$f.LogoURL}}" placeholder="/static/uploads/logo.png">
+                            <button type="button" @click="pickImage" class="btn-secondary text-sm">选择</button>
+                        </div>
+                    </div>
+                    <div><label class="form-label">分类</label><input type="text" name="category" class="form-input" value="{{$f.Category}}" placeholder="技术博客 / 朋友 / 工具"></div>
+                </div>
+                <div><label class="form-label">简介</label><input type="text" name="description" class="form-input" value="{{$f.Description}}" placeholder="一句话描述"></div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div><label class="form-label">提交者邮箱 (可选)</label><input type="email" name="submitter_email" class="form-input" value="{{$f.SubmitterEmail}}"></div>
+                    <div><label class="form-label">备注 (可选)</label><input type="text" name="submitter_note" class="form-input" value="{{$f.SubmitterNote}}"></div>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="form-label">状态</label>
+                        <select name="status" class="form-input bg-white">
+                            <option value="pending" {{if eq $f.Status "pending"}}selected{{end}}>待审核</option>
+                            <option value="approved" {{if eq $f.Status "approved"}}selected{{end}}>已批准</option>
+                            <option value="rejected" {{if eq $f.Status "rejected"}}selected{{end}}>已拒绝</option>
+                        </select>
+                    </div>
+                    <div><label class="form-label">排序</label><input type="number" name="sort_order" class="form-input" value="{{$f.SortOrder}}"></div>
+                    <div class="flex items-end pb-2">
+                        <label class="flex items-center gap-2"><input type="checkbox" name="is_published" value="1" {{if eq $f.IsPublished 1}}checked{{end}} class="w-4 h-4 text-indigo-600"> 公开显示</label>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
+                    <button type="submit" class="btn-primary">{{if $f.ID}}保存更改{{else}}创建友链{{end}}</button>
+                    {{if $f.ID}}<a href="/admin/friendlinks" class="btn-secondary">取消</a>{{end}}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="page-card">
+        <div class="page-card-header">
+            <span class="text-sm font-medium text-slate-700">所有友链 ({{len $d.items}})</span>
+        </div>
+        <table class="data-table">
+            <thead><tr>
+                <th class="w-16">Logo</th>
+                <th>名称 / 简介</th>
+                <th class="w-44">链接</th>
+                <th class="w-24">分类</th>
+                <th class="w-20">状态</th>
+                <th class="w-20">显示</th>
+                <th class="w-24">提交时间</th>
+                <th class="w-44">操作</th>
+            </tr></thead>
+            <tbody>
+                {{range $link := $d.items}}
+                <tr class="{{if eq $link.Status "pending"}}bg-amber-50/40{{end}}">
+                    <td>
+                        {{if $link.LogoURL}}
+                        <img src="{{$link.LogoURL}}" alt="" class="w-10 h-10 rounded object-cover border border-slate-200">
+                        {{else}}
+                        <div class="w-10 h-10 rounded bg-slate-100 flex items-center justify-center text-slate-400">🔗</div>
+                        {{end}}
+                    </td>
+                    <td>
+                        <div class="font-medium text-slate-900">{{$link.Name}}</div>
+                        {{if $link.Description}}<div class="text-xs text-slate-500">{{$link.Description}}</div>{{end}}
+                        {{if $link.SubmitterEmail}}<div class="text-[10px] text-slate-400 mt-0.5">提交者: {{$link.SubmitterEmail}}</div>{{end}}
+                    </td>
+                    <td><a href="{{$link.URL}}" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-800 text-xs break-all">{{$link.URL}}</a></td>
+                    <td><span class="text-xs text-slate-600">{{if $link.Category}}{{$link.Category}}{{else}}-{{end}}</span></td>
+                    <td>
+                        {{if eq $link.Status "pending"}}<span class="badge badge-yellow">待审核</span>
+                        {{else if eq $link.Status "approved"}}<span class="badge badge-green">已批准</span>
+                        {{else}}<span class="badge badge-gray">已拒绝</span>{{end}}
+                    </td>
+                    <td>{{if eq $link.IsPublished 1}}<span class="text-green-600">✓</span>{{else}}<span class="text-slate-400">-</span>{{end}}</td>
+                    <td class="text-xs text-slate-400 whitespace-nowrap">{{formatDate $link.CreatedAt}}</td>
+                    <td>
+                        <div class="flex items-center flex-wrap gap-1.5">
+                            {{if eq $link.Status "pending"}}
+                            <a href="/admin/friendlinks/action?id={{$link.ID}}&action=approve" class="text-green-600 hover:text-green-800 text-xs">通过</a>
+                            <a href="/admin/friendlinks/action?id={{$link.ID}}&action=reject" class="text-amber-600 hover:text-amber-800 text-xs">拒绝</a>
+                            {{end}}
+                            <a href="/admin/friendlinks?id={{$link.ID}}" class="text-indigo-600 hover:text-indigo-800 text-xs">编辑</a>
+                            <a href="/admin/friendlinks/action?id={{$link.ID}}&action=delete" class="text-red-500 hover:text-red-700 text-xs" onclick="return confirm('确定删除？')">删除</a>
+                        </div>
+                    </td>
+                </tr>
+                {{else}}
+                <tr><td colspan="8" class="text-center text-slate-400 py-8">暂无友链</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Logo picker modal -->
+    <div x-show="showImagePicker" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showImagePicker = false">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                <h3 class="text-base font-semibold text-slate-900">选择 Logo 图片</h3>
+                <button type="button" @click="showImagePicker = false" class="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="grid grid-cols-4 gap-3" x-show="images.length > 0">
+                    <template x-for="img in images" :key="img.name">
+                        <div class="aspect-square rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:border-indigo-400" @click="selectImage(img.url)">
+                            <img :src="img.url" class="w-full h-full object-cover" loading="lazy">
+                        </div>
+                    </template>
+                </div>
+                <div x-show="images.length === 0" class="text-center text-slate-400 py-8 text-sm">暂无图片</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function friendLinkEditor() {
+    return {
+        showImagePicker: false,
+        images: [],
+        async pickImage() {
+            this.showImagePicker = true;
+            try { this.images = await (await fetch('/admin/upload?list=json')).json(); } catch(e) { this.images = []; }
+        },
+        selectImage(url) {
+            document.getElementById('logo-input').value = url;
+            this.showImagePicker = false;
+        }
+    };
+}
+</script>
+{{end}}

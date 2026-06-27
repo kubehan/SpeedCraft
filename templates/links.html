@@ -1,0 +1,115 @@
+{{template "layout" .}}
+{{define "content"}}
+<section class="hero-section tech-bg pt-32 pb-20">
+    <div class="tech-grid"></div>
+    <div class="tech-orb"><i></i></div>
+    <div class="tech-dots"></div>
+    <div class="tech-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">友情链接</h1>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto">志同道合的朋友 · 优秀的网站推荐</p>
+    </div>
+</section>
+
+<section class="py-20 tech-soft">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {{if eq (len .Data) 0}}
+        <div class="reveal text-center py-16">
+            <div class="text-6xl mb-6">🔗</div>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-2">友链征集中</h3>
+            <p class="text-gray-500 mb-6">下方申请，欢迎交换链接</p>
+        </div>
+        {{else}}
+        <div class="reveal-stagger grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {{range $link := .Data}}
+            <a href="{{$link.URL}}" target="_blank" rel="noopener" class="card p-5 group block">
+                <div class="flex items-start gap-3">
+                    {{if $link.LogoURL}}
+                    <img src="{{$link.LogoURL}}" alt="{{$link.Name}}" class="w-10 h-10 rounded object-cover flex-shrink-0 border border-gray-200" loading="lazy">
+                    {{else}}
+                    <div class="w-10 h-10 rounded bg-primary-soft text-primary-soft flex items-center justify-center text-lg flex-shrink-0">🔗</div>
+                    {{end}}
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold text-gray-900 group-hover:text-primary transition-colors truncate">{{$link.Name}}</h3>
+                        {{if $link.Description}}<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{$link.Description}}</p>{{end}}
+                        {{if $link.Category}}<span class="inline-block mt-2 px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] rounded">{{$link.Category}}</span>{{end}}
+                    </div>
+                </div>
+            </a>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</section>
+
+<section id="apply" class="py-20 bg-white">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-bold text-gray-900 mb-3">申请友链</h2>
+            <p class="text-base text-gray-600">填写下方信息，审核通过后会显示在友链页</p>
+        </div>
+        <div class="bg-white rounded-xl p-7 md:p-8 border border-gray-200 shadow-sm" x-data="linkApplyForm()">
+            <form @submit.prevent="submit()" class="space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">站点名称 *</label>
+                        <input type="text" x-model="form.name" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="某某博客">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">站点链接 *</label>
+                        <input type="url" x-model="form.url" required class="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="https://example.com">
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Logo URL</label>
+                        <input type="url" x-model="form.logo_url" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="https://example.com/favicon.png">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">分类</label>
+                        <input type="text" x-model="form.category" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="技术博客 / 工具">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">一句话简介</label>
+                    <input type="text" x-model="form.description" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="简单介绍下你的站点">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">你的邮箱（审核结果通知用）</label>
+                    <input type="email" x-model="form.submitter_email" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="your@email.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">备注</label>
+                    <textarea x-model="form.submitter_note" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none" placeholder="已在我站添加贵站链接 / 其他说明..."></textarea>
+                </div>
+                <button type="submit" :disabled="submitting" class="w-full py-3 text-white font-semibold bg-primary rounded-lg transition-colors disabled:opacity-50" x-text="submitting ? '提交中...' : '提交申请 →'"></button>
+                <div x-show="success" x-cloak class="p-3 bg-green-50 text-green-700 rounded-lg text-center text-sm">✓ 申请已提交！请等待管理员审核。</div>
+                <div x-show="error" x-cloak class="p-3 bg-red-50 text-red-700 rounded-lg text-center text-sm" x-text="error"></div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+function linkApplyForm() {
+    return {
+        form: { name: '', url: '', logo_url: '', description: '', category: '', submitter_email: '', submitter_note: '' },
+        submitting: false, success: false, error: '',
+        async submit() {
+            this.submitting = true; this.success = false; this.error = '';
+            try {
+                const params = new URLSearchParams(this.form);
+                const res = await fetch('/api/links/apply', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params });
+                const data = await res.json();
+                if (data.success) {
+                    this.success = true;
+                    this.form = { name: '', url: '', logo_url: '', description: '', category: '', submitter_email: '', submitter_note: '' };
+                } else {
+                    this.error = data.error || '提交失败';
+                }
+            } catch(e) { this.error = '网络错误，请稍后重试'; }
+            this.submitting = false;
+        }
+    };
+}
+</script>
+{{end}}

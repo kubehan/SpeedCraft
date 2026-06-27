@@ -41,6 +41,8 @@ func main() {
 	mux.HandleFunc("/contact", handlers.About(cfg))
 	mux.HandleFunc("/page/{slug}", handlers.PublicPage(cfg))
 	mux.HandleFunc("/page/{slug}/raw", handlers.PublicPageRaw(cfg))
+	mux.HandleFunc("/links", handlers.PublicFriendLinks(cfg))
+	mux.HandleFunc("/api/links/apply", handlers.ApplyFriendLink(cfg))
 	mux.HandleFunc("/ad/click/{id}", handlers.AdClick(cfg))
 	mux.HandleFunc("/sitemap.xml", handlers.Sitemap(cfg))
 	mux.HandleFunc("/robots.txt", handlers.RobotsTxt(cfg))
@@ -114,6 +116,10 @@ func main() {
 	mux.HandleFunc("/admin/ads", handlers.AdminAds(cfg))
 	mux.HandleFunc("/admin/ads/save", handlers.AdminAdSave(cfg))
 	mux.HandleFunc("/admin/ads/delete", handlers.AdminAdDelete(cfg))
+
+	mux.HandleFunc("/admin/friendlinks", handlers.AdminFriendLinks(cfg))
+	mux.HandleFunc("/admin/friendlinks/save", handlers.AdminFriendLinkSave(cfg))
+	mux.HandleFunc("/admin/friendlinks/action", handlers.AdminFriendLinkAction(cfg))
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 

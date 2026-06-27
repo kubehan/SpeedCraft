@@ -156,6 +156,7 @@ func InitTemplates() error {
 				{Key: "skills", Label: "技能管理", URL: "/admin/skills", Icon: "🎯"},
 				{Key: "tags", Label: "标签管理", URL: "/admin/tags", Icon: "🏷️"},
 				{Key: "ads", Label: "广告管理", URL: "/admin/ads", Icon: "📢"},
+				{Key: "friendlinks", Label: "友链管理", URL: "/admin/friendlinks", Icon: "🔗"},
 				{Key: "settings", Label: "站点设置", URL: "/admin/settings", Icon: "⚙️"},
 				{Key: "messages", Label: "留言管理", URL: "/admin/messages", Icon: "💬"},
 				{Key: "upload", Label: "文件上传", URL: "/admin/upload", Icon: "📎"},

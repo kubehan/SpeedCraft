@@ -1019,3 +1019,145 @@ func AdClick(cfg *config.Config) http.HandlerFunc {
 		http.Redirect(w, r, ad.LinkURL, http.StatusFound)
 	}
 }
+
+// -------- FriendLink Admin CRUD --------
+func AdminFriendLinks(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		list, _ := models.GetAllFriendLinks()
+		if list == nil {
+			list = []models.FriendLink{}
+		}
+		var editItem models.FriendLink
+		if idStr := r.URL.Query().Get("id"); idStr != "" {
+			if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+				if f, err := models.GetFriendLinkByID(id); err == nil && f != nil {
+					editItem = *f
+				}
+			}
+		}
+		render(w, r, "admin/friendlinks.html", PageData{
+			Title:   "友链管理 · " + cfg.SiteName,
+			Site:    cfg,
+			Current: "friendlinks",
+			Data:    map[string]interface{}{"items": list, "edit": editItem},
+		})
+	})
+}
+
+func AdminFriendLinkSave(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
+		sortOrder, _ := strconv.Atoi(r.FormValue("sort_order"))
+		published := 0
+		if r.FormValue("is_published") == "1" {
+			published = 1
+		}
+		status := r.FormValue("status")
+		if status == "" {
+			status = "approved"
+		}
+		f := &models.FriendLink{
+			ID:             id,
+			Name:           r.FormValue("name"),
+			URL:            r.FormValue("url"),
+			LogoURL:        r.FormValue("logo_url"),
+			Description:    r.FormValue("description"),
+			Category:       r.FormValue("category"),
+			Status:         status,
+			SubmitterEmail: r.FormValue("submitter_email"),
+			SubmitterNote:  r.FormValue("submitter_note"),
+			SortOrder:      sortOrder,
+			IsPublished:    published,
+		}
+		if _, err := models.SaveFriendLink(f); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/admin/friendlinks", http.StatusSeeOther)
+	})
+}
+
+// AdminFriendLinkAction handles approve/reject/delete via GET (for simplicity inside admin)
+func AdminFriendLinkAction(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+		action := r.URL.Query().Get("action")
+		f, err := models.GetFriendLinkByID(id)
+		if err != nil || f == nil {
+			http.NotFound(w, r)
+			return
+		}
+		switch action {
+		case "approve":
+			f.Status = "approved"
+			f.IsPublished = 1
+		case "reject":
+			f.Status = "rejected"
+			f.IsPublished = 0
+		case "delete":
+			models.DeleteFriendLink(id)
+			http.Redirect(w, r, "/admin/friendlinks", http.StatusSeeOther)
+			return
+		}
+		models.SaveFriendLink(f)
+		http.Redirect(w, r, "/admin/friendlinks", http.StatusSeeOther)
+	})
+}
+
+// -------- Public FriendLinks handlers --------
+func PublicFriendLinks(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		list, _ := models.GetPublishedFriendLinks()
+		if list == nil {
+			list = []models.FriendLink{}
+		}
+		render(w, r, "links.html", PageData{
+			Title:        "友链 · " + models.GetSetting("site_name"),
+			Site:         cfg,
+			Data:         list,
+			Current:      "links",
+			CanonicalURL: scheme(r) + "://" + r.Host + "/links",
+		})
+	}
+}
+
+// ApplyFriendLink handles the public application form submission.
+func ApplyFriendLink(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			respondJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			return
+		}
+		name := strings.TrimSpace(r.FormValue("name"))
+		url := strings.TrimSpace(r.FormValue("url"))
+		if name == "" || url == "" {
+			respondJSON(w, http.StatusBadRequest, map[string]interface{}{"success": false, "error": "名称和链接必填"})
+			return
+		}
+		// Basic URL validation
+		if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+			respondJSON(w, http.StatusBadRequest, map[string]interface{}{"success": false, "error": "链接必须以 http:// 或 https:// 开头"})
+			return
+		}
+		f := &models.FriendLink{
+			Name:           name,
+			URL:            url,
+			LogoURL:        strings.TrimSpace(r.FormValue("logo_url")),
+			Description:    strings.TrimSpace(r.FormValue("description")),
+			Category:       strings.TrimSpace(r.FormValue("category")),
+			Status:         "pending",
+			SubmitterEmail: strings.TrimSpace(r.FormValue("submitter_email")),
+			SubmitterNote:  strings.TrimSpace(r.FormValue("submitter_note")),
+			IsPublished:    0,
+		}
+		if _, err := models.SaveFriendLink(f); err != nil {
+			respondJSON(w, http.StatusInternalServerError, map[string]interface{}{"success": false, "error": "提交失败"})
+			return
+		}
+		respondJSON(w, http.StatusOK, map[string]interface{}{"success": true, "message": "申请已提交，等待审核"})
+	}
+}

@@ -27,6 +27,7 @@ func Sitemap(cfg *config.Config) http.HandlerFunc {
 			{"/opensource", "0.8"},
 			{"/blog", "0.9"},
 			{"/about", "0.7"},
+			{"/links", "0.5"},
 		}
 		for _, p := range static {
 			sb.WriteString(fmt.Sprintf(`  <url><loc>%s%s</loc><priority>%s</priority></url>`+"\n", base, p.path, p.priority))
