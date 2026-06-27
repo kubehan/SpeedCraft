@@ -288,12 +288,14 @@
                             {{$brand := platformColor $sa.Platform}}
                             <div class="social-item relative group" x-data="{ show: false }" @mouseenter="show = true" @mouseleave="show = false">
                                 {{if $sa.URL}}
-                                <a href="{{$sa.URL}}" target="_blank" rel="noopener" class="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-800/60 border border-gray-700 hover:scale-110 transition-transform" style="--brand: {{$brand}}" onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand');" onmouseout="this.style.background=''; this.style.borderColor='';" title="{{$sa.Name}}">
-                                    <span class="text-lg">{{platformIcon $sa.Platform}}</span>
+                                <a href="{{$sa.URL}}" target="_blank" rel="noopener" class="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-md bg-gray-800/60 border border-gray-700 text-gray-300 hover:text-white transition-all hover:-translate-y-0.5" style="--brand: {{$brand}}" onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand'); this.style.color='#fff';" onmouseout="this.style.background=''; this.style.borderColor=''; this.style.color='';" title="{{$sa.Name}}">
+                                    <span class="w-4 h-4 flex-shrink-0">{{platformSVG $sa.Platform}}</span>
+                                    <span class="text-[11px] font-medium leading-none">{{platformLabel $sa.Platform}}</span>
                                 </a>
                                 {{else}}
-                                <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-800/60 border border-gray-700 cursor-pointer hover:scale-110 transition-transform" style="--brand: {{$brand}}" onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand');" onmouseout="this.style.background=''; this.style.borderColor='';" title="{{$sa.Name}}">
-                                    <span class="text-lg">{{platformIcon $sa.Platform}}</span>
+                                <div class="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-md bg-gray-800/60 border border-gray-700 text-gray-300 cursor-pointer transition-all hover:-translate-y-0.5 hover:text-white" style="--brand: {{$brand}}" onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand'); this.style.color='#fff';" onmouseout="this.style.background=''; this.style.borderColor=''; this.style.color='';" title="{{$sa.Name}}">
+                                    <span class="w-4 h-4 flex-shrink-0">{{platformSVG $sa.Platform}}</span>
+                                    <span class="text-[11px] font-medium leading-none">{{platformLabel $sa.Platform}}</span>
                                 </div>
                                 {{end}}
 

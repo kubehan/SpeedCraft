@@ -89,7 +89,7 @@
             <tbody>
                 {{range $a := $d.items}}
                 <tr>
-                    <td class="text-2xl">{{platformIcon $a.Platform}}</td>
+                    <td><span class="inline-flex items-center justify-center w-8 h-8 rounded" style="background: color-mix(in srgb, {{platformColor $a.Platform}} 18%, white); color: {{platformColor $a.Platform}};">{{platformSVG $a.Platform}}</span></td>
                     <td>
                         <div class="font-medium text-slate-900">{{$a.Name}}</div>
                         {{if $a.Identifier}}<div class="text-xs text-slate-500 font-mono">{{$a.Identifier}}</div>{{end}}

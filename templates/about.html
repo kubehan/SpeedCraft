@@ -29,13 +29,13 @@
                         <div class="relative group" x-data="{ show: false }" @mouseenter="show = true" @mouseleave="show = false">
                             {{if $sa.URL}}
                             <a href="{{$sa.URL}}" target="_blank" rel="noopener" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-200 hover:scale-105 hover:text-white transition-all" style="--brand: {{$brand}}" onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand');" onmouseout="this.style.background=''; this.style.borderColor='';">
-                                <span class="text-base">{{platformIcon $sa.Platform}}</span>
-                                <span class="text-xs font-medium">{{$sa.Name}}</span>
+                                <span class="w-4 h-4 flex-shrink-0">{{platformSVG $sa.Platform}}</span>
+                                <span class="text-xs font-medium">{{platformLabel $sa.Platform}} · {{$sa.Name}}</span>
                             </a>
                             {{else}}
                             <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-200 cursor-pointer hover:scale-105 hover:text-white transition-all" style="--brand: {{$brand}}" onmouseover="this.style.background=this.style.getPropertyValue('--brand'); this.style.borderColor=this.style.getPropertyValue('--brand');" onmouseout="this.style.background=''; this.style.borderColor='';">
-                                <span class="text-base">{{platformIcon $sa.Platform}}</span>
-                                <span class="text-xs font-medium">{{$sa.Name}}</span>
+                                <span class="w-4 h-4 flex-shrink-0">{{platformSVG $sa.Platform}}</span>
+                                <span class="text-xs font-medium">{{platformLabel $sa.Platform}} · {{$sa.Name}}</span>
                             </div>
                             {{end}}
                             {{if or $sa.QRURL $sa.Identifier}}
