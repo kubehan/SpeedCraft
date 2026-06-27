@@ -152,6 +152,28 @@ func InitTemplates() error {
 			}
 			return key
 		},
+		"platformColor": func(key string) string {
+			// Brand colors for each platform
+			colors := map[string]string{
+				"wechat_official": "#07c160", "wechat_channel": "#07c160", "wechat_mini": "#07c160", "wechat_personal": "#07c160",
+				"xiaohongshu":     "#ff2442",
+				"douyin":          "#000000",
+				"kuaishou":        "#ff4906",
+				"weibo":           "#e6162d",
+				"bilibili":        "#fb7299",
+				"zhihu":           "#0084ff",
+				"github":          "#24292e",
+				"twitter":         "#1da1f2",
+				"youtube":         "#ff0000",
+				"qq_group":        "#1296db",
+				"telegram":        "#0088cc",
+				"custom":          "#6366f1",
+			}
+			if v, ok := colors[key]; ok {
+				return v
+			}
+			return "#6366f1"
+		},
 		"linkColor": func(i interface{}) string {
 			// Tasteful palette that works on dark footer backgrounds
 			palette := []string{
