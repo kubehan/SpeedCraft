@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"crypto/rand"
+	"encoding/csv"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -10,8 +12,13 @@ import (
 	"speedcraft/models"
 )
 
+type sessionData struct {
+	Valid     bool
+	CSRFToken string
+}
+
 var (
-	sessions   = make(map[string]bool)
+	sessions   = make(map[string]*sessionData)
 	sessionsMu sync.RWMutex
 )
 
@@ -28,6 +35,7 @@ type AdminData struct {
 	PageSize    int
 	TotalPages  int
 	Status      string
+	Keyword     string
 	ActiveTab   string
 }
 
@@ -38,8 +46,9 @@ func AdminLogin(cfg *config.Config) http.HandlerFunc {
 			password := r.FormValue("password")
 			if username == "admin" && password == cfg.AdminPwd {
 				token := generateToken()
+				csrfToken := generateToken()
 				sessionsMu.Lock()
-				sessions[token] = true
+				sessions[token] = &sessionData{Valid: true, CSRFToken: csrfToken}
 				sessionsMu.Unlock()
 
 				http.SetCookie(w, &http.Cookie{
@@ -53,14 +62,14 @@ func AdminLogin(cfg *config.Config) http.HandlerFunc {
 				http.Redirect(w, r, "/admin", http.StatusSeeOther)
 				return
 			}
-			render(w, "admin/login.html", PageData{
+			render(w, r, "admin/login.html", PageData{
 				Title: "登录 · " + cfg.SiteName,
 				Site:  cfg,
 				Data:  map[string]interface{}{"error": "用户名或密码错误"},
 			})
 			return
 		}
-		render(w, "admin/login.html", PageData{
+		render(w, r, "admin/login.html", PageData{
 			Title: "登录 · " + cfg.SiteName,
 			Site:  cfg,
 			Data:  map[string]interface{}{"error": ""},
@@ -93,9 +102,37 @@ func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		sessionsMu.RLock()
-		valid := sessions[cookie.Value]
+		session := sessions[cookie.Value]
 		sessionsMu.RUnlock()
-		if !valid {
+		if session == nil || !session.Valid {
+			http.Redirect(w, r, "/admin/login", http.StatusFound)
+			return
+		}
+
+		if r.Method == http.MethodPost {
+			formToken := r.FormValue("csrf_token")
+			if formToken == "" || formToken != session.CSRFToken {
+				http.Error(w, "无效的 CSRF Token", http.StatusForbidden)
+				return
+			}
+		}
+
+		next(w, r)
+	}
+}
+
+// SessionOnlyMiddleware checks admin session but skips CSRF — for read-only endpoints like preview
+func SessionOnlyMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("admin_token")
+		if err != nil {
+			http.Redirect(w, r, "/admin/login", http.StatusFound)
+			return
+		}
+		sessionsMu.RLock()
+		session := sessions[cookie.Value]
+		sessionsMu.RUnlock()
+		if session == nil || !session.Valid {
 			http.Redirect(w, r, "/admin/login", http.StatusFound)
 			return
 		}
@@ -105,7 +142,7 @@ func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 func AdminDashboard(cfg *config.Config) http.HandlerFunc {
 	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
-		render(w, "admin/dashboard.html", PageData{
+		render(w, r, "admin/dashboard.html", PageData{
 			Title: "管理后台 · " + cfg.SiteName,
 			Site:  cfg,
 		})
@@ -115,6 +152,7 @@ func AdminDashboard(cfg *config.Config) http.HandlerFunc {
 func AdminMessages(cfg *config.Config) http.HandlerFunc {
 	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		status := r.URL.Query().Get("status")
+		keyword := r.URL.Query().Get("keyword")
 		pageStr := r.URL.Query().Get("page")
 		page, _ := strconv.Atoi(pageStr)
 		if page < 1 {
@@ -122,7 +160,7 @@ func AdminMessages(cfg *config.Config) http.HandlerFunc {
 		}
 		pageSize := 20
 
-		messages, total, err := models.GetMessages(status, page, pageSize)
+		messages, total, err := models.GetMessages(status, keyword, page, pageSize)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -133,7 +171,7 @@ func AdminMessages(cfg *config.Config) http.HandlerFunc {
 			messages = []models.Message{}
 		}
 
-		render(w, "admin/messages.html", PageData{
+		render(w, r, "admin/messages.html", PageData{
 			Title:   "留言管理 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "messages",
@@ -144,6 +182,7 @@ func AdminMessages(cfg *config.Config) http.HandlerFunc {
 				PageSize:   pageSize,
 				TotalPages: totalPages,
 				Status:     status,
+				Keyword:    keyword,
 				ActiveTab:  "messages",
 			},
 		})
@@ -171,5 +210,32 @@ func AdminUpdateMessage(cfg *config.Config) http.HandlerFunc {
 		}
 
 		http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
+	})
+}
+
+func AdminMessageExport(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		messages, err := models.GetAllMessages()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+		w.Header().Set("Content-Disposition", "attachment; filename=messages.csv")
+		// BOM for Excel UTF-8
+		w.Write([]byte{0xEF, 0xBB, 0xBF})
+
+		writer := csv.NewWriter(w)
+		writer.Write([]string{"ID", "姓名", "邮箱", "电话", "公司", "服务类型", "预算", "留言", "状态", "时间"})
+		for _, m := range messages {
+			writer.Write([]string{
+				fmt.Sprintf("%d", m.ID),
+				m.Name, m.Email, m.Phone, m.Company,
+				m.ServiceType, m.Budget, m.Message, m.Status,
+				m.CreatedAt.Format("2006-01-02 15:04"),
+			})
+		}
+		writer.Flush()
 	})
 }

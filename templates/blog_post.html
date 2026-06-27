@@ -2,24 +2,25 @@
 {{define "content"}}
 {{$post := .Data.post}}
 {{$content := .Data.content}}
-<section class="bg-gray-900 pt-32 pb-20">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <a href="/blog" class="text-gray-400 hover:text-white mb-8 inline-flex items-center">← 返回博客</a>
-        <h1 class="text-3xl md:text-4xl font-bold text-white mt-8 mb-4">{{$post.Title}}</h1>
-        <div class="flex items-center space-x-4 text-sm text-gray-400">
+<section class="hero-section tech-bg pt-32 pb-16">
+    <div class="tech-grid"></div>
+    <div class="tech-orb"><i></i></div>
+    <div class="tech-content max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <a href="/blog" class="text-gray-300 hover:text-white text-sm inline-flex items-center mb-6">← 返回博客</a>
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">{{$post.Title}}</h1>
+        <div class="flex flex-wrap items-center gap-3 text-sm text-gray-400">
             <span>{{formatDate $post.CreatedAt}}</span>
+            {{if $post.Tags}}<span>·</span><span>{{$post.Tags}}</span>{{end}}
             <span>·</span>
-            <span>{{$post.Tags}}</span>
-            <span>·</span>
-            <span>{{$post.Views}} 次阅读</span>
+            <span>👁 {{$post.Views}} 次阅读</span>
         </div>
     </div>
 </section>
 
 <section class="py-12 bg-gray-50">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <article class="bg-white rounded-2xl p-8 md:p-12 border border-gray-100 prose-lg max-w-none">
-            {{safeHTML $content}}
+        <article class="bg-white rounded-xl p-8 md:p-12 border border-gray-200">
+            <div class="prose prose-lg max-w-none">{{safeHTML $content}}</div>
         </article>
     </div>
 </section>

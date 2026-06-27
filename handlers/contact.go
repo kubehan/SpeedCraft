@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/smtp"
+	"strings"
 	"speedcraft/config"
 	"speedcraft/models"
 )
@@ -13,7 +14,7 @@ import (
 func About(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings, _ := models.GetAllSettings()
-		render(w, "about.html", PageData{
+		render(w, r, "about.html", PageData{
 			Title:   "关于 · " + models.GetSetting("site_name"),
 			Site:    cfg,
 			Data:    settings,
@@ -116,4 +117,39 @@ func sendEmailNotification(to string, req models.MessageRequest) {
 	if err := smtp.SendMail(addr, auth, user, []string{to}, []byte(msg)); err != nil {
 		fmt.Printf("[EMAIL] 发送失败: %v\n", err)
 	}
+}
+
+func AdminTestNotification(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			respondJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
+			return
+		}
+
+		testReq := models.MessageRequest{
+			Name:    "测试用户",
+			Email:   "test@speedcraft.dev",
+			Message: "这是一条来自速创社管理后台的测试通知消息。如果收到此消息，说明通知配置正确。",
+		}
+
+		errs := []string{}
+		webhook := models.GetSetting("wechat_webhook")
+		notifyEmail := models.GetSetting("notify_email")
+
+		if webhook != "" {
+			sendWechatWebhook(webhook, testReq)
+		}
+		if notifyEmail != "" {
+			sendEmailNotification(notifyEmail, testReq)
+		}
+		if webhook == "" && notifyEmail == "" {
+			errs = append(errs, "请先配置 Webhook 或 SMTP")
+		}
+
+		if len(errs) > 0 {
+			respondJSON(w, http.StatusBadRequest, map[string]interface{}{"error": strings.Join(errs, "; ")})
+			return
+		}
+		respondJSON(w, http.StatusOK, map[string]interface{}{"success": true, "message": "测试通知已发送，请检查"})
+	})
 }

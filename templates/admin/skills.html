@@ -1,21 +1,27 @@
 {{template "admin_layout" .}}
 {{define "admin_content"}}
+{{$d := .Data}}
+{{$edit := $d.edit}}
 <div>
     <div class="flex items-center justify-between mb-6">
         <div><h1 class="text-xl font-bold text-slate-900">技能管理</h1><p class="text-sm text-slate-500 mt-0.5">管理首页技术栈展示</p></div>
     </div>
     <div class="page-card">
         <div class="page-card-header bg-slate-50/50">
-            <span class="text-sm font-medium text-slate-700">添加技能</span>
+            <span class="text-sm font-medium text-slate-700">{{if $edit.ID}}编辑技能{{else}}添加技能{{end}}</span>
         </div>
         <div class="page-card-body">
             <form method="POST" action="/admin/skills/save" class="flex flex-wrap items-end gap-3">
-                <div><label class="form-label">图标</label><input type="text" name="icon" class="form-input w-16" placeholder="☁️"></div>
-                <div class="flex-1 min-w-[150px]"><label class="form-label">名称</label><input type="text" name="name" required class="form-input" placeholder="AWS / Azure"></div>
-                <div><label class="form-label">级别</label><select name="level" class="form-input bg-white"><option>Expert</option><option>Advanced</option><option>Intermediate</option></select></div>
-                <div><label class="form-label">分类</label><input type="text" name="category" class="form-input w-24" placeholder="Cloud"></div>
-                <div><label class="form-label">排序</label><input type="number" name="sort_order" value="0" class="form-input w-16"></div>
-                <button type="submit" class="btn-primary">添加</button>
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                {{if $edit.ID}}<input type="hidden" name="id" value="{{$edit.ID}}">{{end}}
+                <div><label class="form-label">图标</label><input type="text" name="icon" class="form-input w-16" placeholder="☁️" value="{{$edit.Icon}}"></div>
+                <div class="flex-1 min-w-[150px]"><label class="form-label">名称</label><input type="text" name="name" required class="form-input" placeholder="AWS / Azure" value="{{$edit.Name}}"></div>
+                <div><label class="form-label">级别</label><select name="level" class="form-input bg-white"><option value="Expert" {{if eq $edit.Level "Expert"}}selected{{end}}>Expert</option><option value="Advanced" {{if eq $edit.Level "Advanced"}}selected{{end}}>Advanced</option><option value="Intermediate" {{if eq $edit.Level "Intermediate"}}selected{{end}}>Intermediate</option></select></div>
+                <div><label class="form-label">分类</label><input type="text" name="category" class="form-input w-24" placeholder="Cloud" value="{{$edit.Category}}"></div>
+                <div><label class="form-label">排序</label><input type="number" name="sort_order" value="{{if $edit.ID}}{{$edit.SortOrder}}{{else}}0{{end}}" class="form-input w-16"></div>
+                <div><label class="form-label">发布</label><select name="is_published" class="form-input bg-white"><option value="1" {{if eq $edit.Published 1}}selected{{end}}>是</option><option value="0" {{if eq $edit.Published 0}}selected{{end}}>否</option></select></div>
+                <button type="submit" class="btn-primary">{{if $edit.ID}}保存{{else}}添加{{end}}</button>
+                {{if $edit.ID}}<a href="/admin/skills" class="btn-secondary">取消</a>{{end}}
             </form>
         </div>
         <table class="data-table">
@@ -26,18 +32,23 @@
                 <th class="w-24">级别</th>
                 <th class="w-24">分类</th>
                 <th class="w-20">状态</th>
-                <th class="w-20">操作</th>
+                <th class="w-24">操作</th>
             </tr></thead>
             <tbody>
-                {{range $s := .Data}}
+                {{range $s := $d.items}}
                 <tr>
                     <td class="text-slate-400">{{$s.SortOrder}}</td>
                     <td class="text-lg">{{$s.Icon}}</td>
                     <td class="font-medium text-slate-900">{{$s.Name}}</td>
                     <td><span class="badge {{if eq $s.Level "Expert"}}badge-green{{else}}badge-blue{{end}}">{{$s.Level}}</span></td>
                     <td class="text-slate-500">{{$s.Category}}</td>
-                    <td>{{if eq $s.Published 1}}<span class="text-green-600 text-sm">显示</span>{{else}}<span class="text-slate-400 text-sm">隐藏</span>{{end}}</td>
-                    <td><a href="/admin/skills/delete?id={{$s.ID}}" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('确定删除？')">删除</a></td>
+                    <td><span class="badge cursor-pointer {{if eq $s.Published 1}}badge-green{{else}}badge-gray{{end}}" onclick="togglePublish('skills', {{$s.ID}}, this)">{{if eq $s.Published 1}}显示{{else}}隐藏{{end}}</span></td>
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <a href="/admin/skills?id={{$s.ID}}" class="text-indigo-600 hover:text-indigo-800 text-sm">编辑</a>
+                            <a href="/admin/skills/delete?id={{$s.ID}}" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('确定删除？')">删除</a>
+                        </div>
+                    </td>
                 </tr>
                 {{end}}
             </tbody>

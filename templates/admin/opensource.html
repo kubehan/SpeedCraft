@@ -1,13 +1,20 @@
 {{template "admin_layout" .}}
 {{define "admin_content"}}
+{{$d := .Data}}
 <div>
     <div class="flex items-center justify-between mb-6">
-        <div><h1 class="text-xl font-bold text-slate-900">开源项目管理</h1><p class="text-sm text-slate-500 mt-0.5">展示开发能力和开源贡献</p></div>
-        <a href="/admin/opensource/edit" class="btn-primary">＋ 新增项目</a>
+        <div><h1 class="text-xl font-bold text-slate-900">开源项目管理</h1><p class="text-sm text-slate-500 mt-0.5">共 {{$d.Total}} 个项目</p></div>
+        <div class="flex items-center gap-2">
+            <button onclick="batchAction('open_source_projects','publish')" class="btn-secondary text-sm">批量发布</button>
+            <button onclick="batchAction('open_source_projects','unpublish')" class="btn-secondary text-sm">批量取消</button>
+            <button onclick="batchAction('open_source_projects','delete')" class="btn-danger text-sm">批量删除</button>
+            <a href="/admin/opensource/edit" class="btn-primary">＋ 新增项目</a>
+        </div>
     </div>
     <div class="page-card">
         <table class="data-table">
             <thead><tr>
+                <th class="w-10"><input type="checkbox" class="batch-toggle" onclick="toggleAll(this)"></th>
                 <th>名称</th>
                 <th class="w-24">语言</th>
                 <th class="w-20">Stars</th>
@@ -16,13 +23,14 @@
                 <th class="w-28">操作</th>
             </tr></thead>
             <tbody>
-                {{range $p := .Data}}
+                {{range $p := $d.items}}
                 <tr>
+                    <td><input type="checkbox" class="batch-check batch-toggle" value="{{$p.ID}}"></td>
                     <td class="font-medium text-slate-900"><a href="{{$p.GithubURL}}" target="_blank" class="hover:text-indigo-600">{{$p.Name}}</a></td>
                     <td><span class="badge badge-blue">{{$p.Language}}</span></td>
                     <td class="text-slate-600">⭐ {{$p.Stars}}</td>
                     <td>{{if eq $p.IsFeatured 1}}<span class="text-amber-500 text-lg">★</span>{{else}}-{{end}}</td>
-                    <td>{{if eq $p.IsPublished 1}}<span class="badge badge-green">已发布</span>{{else}}<span class="badge badge-gray">未发布</span>{{end}}</td>
+                    <td><span class="badge cursor-pointer {{if eq $p.IsPublished 1}}badge-green{{else}}badge-gray{{end}}" onclick="togglePublish('open_source_projects', {{$p.ID}}, this)">{{if eq $p.IsPublished 1}}已发布{{else}}未发布{{end}}</span></td>
                     <td>
                         <div class="flex items-center gap-2">
                             <a href="/admin/opensource/edit?id={{$p.ID}}" class="text-indigo-600 hover:text-indigo-800 text-sm">编辑</a>
@@ -30,9 +38,18 @@
                         </div>
                     </td>
                 </tr>
+                {{else}}
+                <tr><td colspan="7" class="text-center text-slate-400 py-8">暂无开源项目</td></tr>
                 {{end}}
             </tbody>
         </table>
     </div>
+    {{if gt $d.TotalPages 1}}
+    <div class="flex justify-center items-center gap-2 mt-6">
+        {{if gt $d.Page 1}}<a href="?page={{sub $d.Page 1}}" class="btn-secondary text-sm">上一页</a>{{end}}
+        <span class="text-sm text-slate-500">第 {{$d.Page}} / {{$d.TotalPages}} 页</span>
+        {{if lt $d.Page $d.TotalPages}}<a href="?page={{add $d.Page 1}}" class="btn-secondary text-sm">下一页</a>{{end}}
+    </div>
+    {{end}}
 </div>
 {{end}}

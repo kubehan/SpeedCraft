@@ -7,6 +7,7 @@
         <h1 class="text-xl font-bold text-slate-900 mt-1">{{if gt $p.ID 0}}编辑开源项目{{else}}新增开源项目{{end}}</h1>
     </div>
     <form method="POST" action="/admin/opensource/save" class="page-card">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <div class="page-card-body space-y-5">
             {{if gt $p.ID 0}}<input type="hidden" name="id" value="{{$p.ID}}">{{end}}
             <div class="grid md:grid-cols-2 gap-5">

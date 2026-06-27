@@ -1,42 +1,49 @@
 {{template "layout" .}}
 {{define "content"}}
-<section class="bg-gray-900 pt-32 pb-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">案例</h1>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+<section class="hero-section tech-bg pt-32 pb-20">
+    <div class="tech-grid"></div>
+    <div class="tech-orb"><i></i></div>
+    <div class="tech-dots"></div>
+    <div class="tech-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">案例</h1>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto">
             过往项目精选，用实力说话
         </p>
     </div>
 </section>
 
-<section class="py-20 bg-gray-50">
+<section class="py-20 tech-soft">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {{if len .Data | eq 0}}
-        <div class="text-center py-20">
+        {{if eq (len .Data) 0}}
+        <div class="reveal text-center py-20">
             <div class="text-6xl mb-6">📂</div>
-            <h3 class="text-2xl font-semibold text-gray-400 mb-2">案例持续更新中</h3>
-            <p class="text-gray-400">更多精彩项目，敬请期待</p>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-2">案例持续更新中</h3>
+            <p class="text-gray-500">更多精彩项目，敬请期待</p>
         </div>
         {{else}}
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="reveal-stagger grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {{range $proj := .Data}}
-            <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 card-hover group">
-                <div class="h-48 gradient-bg flex items-center justify-center">
-                    <span class="text-6xl opacity-30">📁</span>
+            <div class="card overflow-hidden">
+                <div class="h-44 bg-gray-100 flex items-center justify-center">
+                    {{if $proj.ImageURL}}
+                    <img src="{{$proj.ImageURL}}" alt="{{$proj.Title}}" class="w-full h-full object-cover">
+                    {{else}}
+                    <span class="text-5xl opacity-40">📁</span>
+                    {{end}}
                 </div>
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-full">
+                        <span class="inline-block px-2.5 py-0.5 bg-primary-soft text-primary-soft text-xs font-semibold rounded-full">
                             {{$proj.Category}}
                         </span>
-                        <span class="text-xs text-gray-400">{{formatDate $proj.CreatedAt}}</span>
+                        <span class="text-xs text-gray-500">{{formatDate $proj.CreatedAt}}</span>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-indigo-600">{{$proj.Title}}</h3>
-                    <p class="text-gray-500 text-sm leading-relaxed mb-4">{{slice $proj.Summary 120}}</p>
-                    <div class="flex flex-wrap gap-2">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{$proj.Title}}</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">{{slice $proj.Summary 120}}</p>
+                    <div class="flex flex-wrap gap-1.5">
                         {{range $tech := split $proj.TechStack ","}}
                         {{if $tech}}
-                        <span class="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">{{trim $tech}}</span>
+                        <span class="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">{{trim $tech}}</span>
                         {{end}}
                         {{end}}
                     </div>

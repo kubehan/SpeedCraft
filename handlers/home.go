@@ -27,7 +27,7 @@ func Home(cfg *config.Config) http.HandlerFunc {
 		if services == nil {
 			services = []models.Service{}
 		}
-		render(w, "index.html", PageData{
+		render(w, r, "index.html", PageData{
 			Title:   models.GetSetting("site_name") + " · 把创意快速变成产品",
 			Site:    cfg,
 			Data:    HomePageData{Settings: settings, Skills: skills, Services: services},

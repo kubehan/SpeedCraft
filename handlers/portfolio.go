@@ -12,7 +12,7 @@ func Portfolio(cfg *config.Config) http.HandlerFunc {
 		if projects == nil {
 			projects = []models.Project{}
 		}
-		render(w, "portfolio.html", PageData{
+		render(w, r, "portfolio.html", PageData{
 			Title:   "案例 · " + models.GetSetting("site_name"),
 			Site:    cfg,
 			Data:    projects,

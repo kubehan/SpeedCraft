@@ -30,6 +30,7 @@ func main() {
 	mux.HandleFunc("/blog/", handlers.BlogPost(cfg))
 	mux.HandleFunc("/about", handlers.About(cfg))
 	mux.HandleFunc("/contact", handlers.About(cfg))
+	mux.HandleFunc("/page/{slug}", handlers.PublicPage(cfg))
 
 	mux.HandleFunc("/api/message", handlers.SubmitMessage(cfg))
 
@@ -60,6 +61,7 @@ func main() {
 	mux.HandleFunc("/admin/navigation", handlers.AdminNavigation(cfg))
 	mux.HandleFunc("/admin/navigation/save", handlers.AdminNavigationSave(cfg))
 	mux.HandleFunc("/admin/navigation/delete", handlers.AdminNavigationDelete(cfg))
+	mux.HandleFunc("/admin/navigation/reorder", handlers.AdminNavigationReorder(cfg))
 
 	mux.HandleFunc("/admin/settings", handlers.AdminSettings(cfg))
 	mux.HandleFunc("/admin/settings/save", handlers.AdminSettingsSave(cfg))
@@ -70,9 +72,21 @@ func main() {
 
 	mux.HandleFunc("/admin/messages", handlers.AdminMessages(cfg))
 	mux.HandleFunc("/admin/messages/update", handlers.AdminUpdateMessage(cfg))
+	mux.HandleFunc("/admin/messages/export", handlers.AdminMessageExport(cfg))
 
 	mux.HandleFunc("/admin/upload", handlers.AdminUpload(cfg))
+	mux.HandleFunc("/admin/upload/delete", handlers.AdminUploadDelete(cfg))
 	mux.HandleFunc("/admin/preview", handlers.AdminMarkdownPreview(cfg))
+	mux.HandleFunc("/admin/toggle-publish", handlers.AdminTogglePublish(cfg))
+	mux.HandleFunc("/admin/test-notification", handlers.AdminTestNotification(cfg))
+	mux.HandleFunc("/admin/batch", handlers.AdminBatchAction(cfg))
+	mux.HandleFunc("/admin/tags", handlers.AdminTags(cfg))
+	mux.HandleFunc("/admin/tags/delete", handlers.AdminTagDelete(cfg))
+	mux.HandleFunc("/admin/tags/json", handlers.AdminTagsJSON(cfg))
+
+	mux.HandleFunc("/admin/pages", handlers.AdminPages(cfg))
+	mux.HandleFunc("/admin/pages/save", handlers.AdminPageSave(cfg))
+	mux.HandleFunc("/admin/pages/delete", handlers.AdminPageDelete(cfg))
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 

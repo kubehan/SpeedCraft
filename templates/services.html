@@ -1,40 +1,41 @@
 {{template "layout" .}}
 {{define "content"}}
-<!-- Page Header -->
-<section class="bg-gray-900 pt-32 pb-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">服务</h1>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+<section class="hero-section tech-bg pt-32 pb-20">
+    <div class="tech-grid"></div>
+    <div class="tech-orb"><i></i></div>
+    <div class="tech-dots"></div>
+    <div class="tech-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">服务</h1>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto">
             全栈 DevOps 技术服务，助力企业高效交付
         </p>
     </div>
 </section>
 
-<!-- Services Grid -->
-<section class="py-20 bg-gray-50">
+<section class="py-20 tech-soft">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid md:grid-cols-2 gap-8">
+        <div class="reveal-stagger grid md:grid-cols-2 gap-6">
             {{range $svc := .Data}}
-            <div class="bg-white rounded-2xl p-8 border border-gray-100 card-hover group">
-                <div class="flex items-start justify-between mb-6">
-                    <div class="text-5xl">{{$svc.Icon}}</div>
-                    <span class="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 text-sm font-semibold rounded-full">
-                        {{$svc.Pricing}}
-                    </span>
+            <div class="card p-7">
+                <div class="flex items-start justify-between mb-5">
+                    <div class="text-4xl">{{$svc.Icon}}</div>
+                    {{if $svc.Pricing}}<span class="inline-block px-3 py-1 bg-primary-soft text-primary-soft text-sm font-semibold rounded-full">{{$svc.Pricing}}</span>{{end}}
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-indigo-600">{{$svc.Title}}</h3>
-                <p class="text-gray-500 leading-relaxed mb-6">{{$svc.Description}}</p>
-                <div class="grid grid-cols-2 gap-3">
+                <h3 class="text-xl font-bold text-gray-900 mb-3">{{$svc.Title}}</h3>
+                <p class="text-gray-600 leading-relaxed mb-5 text-sm">{{$svc.Description}}</p>
+                <div class="grid grid-cols-2 gap-2.5 mb-5">
                     {{range $feat := split $svc.Features "\n"}}
-                    <div class="flex items-center space-x-2 text-sm text-gray-600">
-                        <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {{if $feat}}
+                    <div class="flex items-start gap-2 text-sm text-gray-700">
+                        <svg class="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                         <span>{{$feat}}</span>
                     </div>
                     {{end}}
+                    {{end}}
                 </div>
-                <a href="/about#contact-form" class="mt-6 inline-flex items-center text-indigo-600 font-medium hover:text-indigo-700">
+                <a href="/about#contact-form" class="inline-flex items-center gap-1 text-primary font-medium hover:underline text-sm">
                     咨询详情 →
                 </a>
             </div>
@@ -43,41 +44,40 @@
     </div>
 </section>
 
-<!-- Process Section -->
-<section class="py-20 bg-white">
+<section class="py-20 tech-light tech-accent">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">合作流程</h2>
-            <p class="text-lg text-gray-500">简单四步，快速启动</p>
+        <div class="reveal text-center mb-14">
+            <h2 class="text-3xl font-bold text-gray-900 mb-3">合作流程</h2>
+            <p class="text-base text-gray-600">简单四步，快速启动</p>
         </div>
-        <div class="grid md:grid-cols-4 gap-8">
+        <div class="reveal-stagger grid md:grid-cols-4 gap-6">
             <div class="text-center">
-                <div class="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span class="text-2xl text-white font-bold">1</span>
+                <div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-xl text-white font-bold">1</span>
                 </div>
-                <h3 class="font-semibold text-gray-900 mb-2">需求沟通</h3>
-                <p class="text-sm text-gray-500">免费咨询，了解您的具体需求</p>
+                <h3 class="font-semibold text-gray-900 mb-1.5">需求沟通</h3>
+                <p class="text-sm text-gray-600">免费咨询，了解您的具体需求</p>
             </div>
             <div class="text-center">
-                <div class="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span class="text-2xl text-white font-bold">2</span>
+                <div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-xl text-white font-bold">2</span>
                 </div>
-                <h3 class="font-semibold text-gray-900 mb-2">方案设计</h3>
-                <p class="text-sm text-gray-500">定制技术方案和报价</p>
+                <h3 class="font-semibold text-gray-900 mb-1.5">方案设计</h3>
+                <p class="text-sm text-gray-600">定制技术方案和报价</p>
             </div>
             <div class="text-center">
-                <div class="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span class="text-2xl text-white font-bold">3</span>
+                <div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-xl text-white font-bold">3</span>
                 </div>
-                <h3 class="font-semibold text-gray-900 mb-2">落地实施</h3>
-                <p class="text-sm text-gray-500">高效交付，全程透明</p>
+                <h3 class="font-semibold text-gray-900 mb-1.5">落地实施</h3>
+                <p class="text-sm text-gray-600">高效交付，全程透明</p>
             </div>
             <div class="text-center">
-                <div class="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span class="text-2xl text-white font-bold">4</span>
+                <div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-xl text-white font-bold">4</span>
                 </div>
-                <h3 class="font-semibold text-gray-900 mb-2">持续支持</h3>
-                <p class="text-sm text-gray-500">售后保障，长期合作</p>
+                <h3 class="font-semibold text-gray-900 mb-1.5">持续支持</h3>
+                <p class="text-sm text-gray-600">售后保障，长期合作</p>
             </div>
         </div>
     </div>

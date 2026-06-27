@@ -1,38 +1,40 @@
 {{template "layout" .}}
 {{define "content"}}
-<section class="bg-gray-900 pt-32 pb-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">博客</h1>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+<section class="hero-section tech-bg pt-32 pb-20">
+    <div class="tech-grid"></div>
+    <div class="tech-orb"><i></i></div>
+    <div class="tech-dots"></div>
+    <div class="tech-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">博客</h1>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto">
             技术分享与实战经验
         </p>
     </div>
 </section>
 
-<section class="py-20 bg-gray-50">
+<section class="py-20 tech-soft">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {{if len .Data | eq 0}}
-        <div class="text-center py-20">
+        {{if eq (len .Data) 0}}
+        <div class="reveal text-center py-20">
             <div class="text-6xl mb-6">📝</div>
-            <h3 class="text-2xl font-semibold text-gray-400 mb-2">博客持续更新中</h3>
-            <p class="text-gray-400">技术文章即将上线，敬请期待</p>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-2">博客持续更新中</h3>
+            <p class="text-gray-500">技术文章即将上线，敬请期待</p>
         </div>
         {{else}}
-        <div class="space-y-8">
+        <div class="reveal-stagger space-y-6">
             {{range $post := .Data}}
-            <article class="bg-white rounded-2xl p-8 border border-gray-100 card-hover">
-                <div class="flex items-center space-x-3 text-sm text-gray-400 mb-4">
+            <article class="card p-7">
+                <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
                     <span>{{formatDate $post.CreatedAt}}</span>
+                    {{if $post.Tags}}<span>·</span><span>{{$post.Tags}}</span>{{end}}
                     <span>·</span>
-                    <span>{{$post.Tags}}</span>
+                    <span>👁 {{$post.Views}}</span>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-3">
-                    <a href="/blog/{{$post.Slug}}" class="hover:text-indigo-600 transition-colors">
-                        {{$post.Title}}
-                    </a>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">
+                    <a href="/blog/{{$post.Slug}}" class="hover-text-primary transition-colors">{{$post.Title}}</a>
                 </h2>
-                <p class="text-gray-500 leading-relaxed">{{$post.Summary}}</p>
-                <a href="/blog/{{$post.Slug}}" class="mt-4 inline-flex items-center text-indigo-600 font-medium hover:text-indigo-700">
+                <p class="text-gray-700 leading-relaxed">{{$post.Summary}}</p>
+                <a href="/blog/{{$post.Slug}}" class="mt-3 inline-flex items-center gap-1 text-primary font-medium hover:underline text-sm">
                     阅读全文 →
                 </a>
             </article>

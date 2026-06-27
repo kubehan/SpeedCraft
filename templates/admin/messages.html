@@ -1,17 +1,23 @@
 {{template "admin_layout" .}}
 {{define "admin_content"}}
 {{$d := .Data}}
-<div>
+<div x-data="{ detail: null }">
     <div class="flex items-center justify-between mb-6">
         <div><h1 class="text-xl font-bold text-slate-900">留言管理</h1><p class="text-sm text-slate-500 mt-0.5">共 {{$d.TotalCount}} 条留言</p></div>
+        <a href="/admin/messages/export" class="btn-secondary text-sm">📥 导出 CSV</a>
     </div>
 
-    <div class="flex flex-wrap gap-2 mb-4">
+    <form method="GET" action="/admin/messages" class="flex flex-wrap gap-2 mb-4 items-center">
         <a href="/admin/messages" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status ""}}bg-indigo-600 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">全部</a>
-        <a href="/admin/messages?status=pending" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "pending"}}bg-amber-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">待处理</a>
-        <a href="/admin/messages?status=contacted" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "contacted"}}bg-blue-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">已联系</a>
-        <a href="/admin/messages?status=closed" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "closed"}}bg-slate-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">已关闭</a>
-    </div>
+        <a href="/admin/messages?status=pending{{if $d.Keyword}}&keyword={{$d.Keyword}}{{end}}" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "pending"}}bg-amber-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">待处理</a>
+        <a href="/admin/messages?status=contacted{{if $d.Keyword}}&keyword={{$d.Keyword}}{{end}}" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "contacted"}}bg-blue-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">已联系</a>
+        <a href="/admin/messages?status=closed{{if $d.Keyword}}&keyword={{$d.Keyword}}{{end}}" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "closed"}}bg-slate-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">已关闭</a>
+        <div class="flex-1"></div>
+        <input type="hidden" name="status" value="{{$d.Status}}">
+        <input type="text" name="keyword" value="{{$d.Keyword}}" class="form-input w-48 text-sm" placeholder="搜索姓名/邮箱/公司/留言...">
+        <button type="submit" class="btn-secondary text-sm">搜索</button>
+        {{if $d.Keyword}}<a href="/admin/messages{{if $d.Status}}?status={{$d.Status}}{{end}}" class="text-xs text-slate-400 hover:text-slate-600">清除</a>{{end}}
+    </form>
 
     <div class="page-card">
         <div class="overflow-x-auto">
@@ -34,7 +40,9 @@
                             {{else if eq $msg.Status "contacted"}}<span class="badge badge-blue">已联系</span>
                             {{else}}<span class="badge badge-gray">已关闭</span>{{end}}
                         </td>
-                        <td class="font-medium text-slate-900">{{$msg.Name}}</td>
+                        <td class="font-medium text-slate-900">
+                            <button @click="detail = { id: {{$msg.ID}}, name: {{json $msg.Name}}, email: {{json $msg.Email}}, phone: {{json $msg.Phone}}, company: {{json $msg.Company}}, serviceType: {{json $msg.ServiceType}}, budget: {{json $msg.Budget}}, message: {{json $msg.Message}}, status: {{json $msg.Status}}, createdAt: '{{formatDateTime $msg.CreatedAt}}' }" class="text-left hover:text-indigo-600">{{$msg.Name}}</button>
+                        </td>
                         <td>
                             <div class="text-slate-900 text-sm">{{$msg.Email}}</div>
                             {{if $msg.Phone}}<div class="text-slate-400 text-xs">{{$msg.Phone}}</div>{{end}}
@@ -50,15 +58,17 @@
                                 <button @click="open = !open" class="text-xs text-indigo-600 hover:text-indigo-700 text-left">操作 ↕</button>
                                 <div x-show="open" @click.outside="open = false" class="flex flex-col gap-1">
                                     {{if ne $msg.Status "contacted"}}
-                                    <form action="/admin/messages/update" method="POST"><input type="hidden" name="id" value="{{$msg.ID}}"><input type="hidden" name="status" value="contacted"><button type="submit" class="text-xs text-blue-600 hover:text-blue-700 text-left">标记已联系</button></form>
+                                    <form action="/admin/messages/update" method="POST"><input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"><input type="hidden" name="id" value="{{$msg.ID}}"><input type="hidden" name="status" value="contacted"><button type="submit" class="text-xs text-blue-600 hover:text-blue-700 text-left">标记已联系</button></form>
                                     {{end}}
                                     {{if ne $msg.Status "closed"}}
-                                    <form action="/admin/messages/update" method="POST"><input type="hidden" name="id" value="{{$msg.ID}}"><input type="hidden" name="status" value="closed"><button type="submit" class="text-xs text-slate-600 hover:text-slate-700 text-left">标记已关闭</button></form>
+                                    <form action="/admin/messages/update" method="POST"><input type="hidden" name="csrf_token" value="{{$.CSRFToken}}"><input type="hidden" name="id" value="{{$msg.ID}}"><input type="hidden" name="status" value="closed"><button type="submit" class="text-xs text-slate-600 hover:text-slate-700 text-left">标记已关闭</button></form>
                                     {{end}}
                                 </div>
                             </div>
                         </td>
                     </tr>
+                    {{else}}
+                    <tr><td colspan="8" class="text-center text-slate-400 py-8">暂无留言</td></tr>
                     {{end}}
                 </tbody>
             </table>
@@ -68,13 +78,54 @@
     {{if gt $d.TotalPages 1}}
     <div class="flex justify-center items-center gap-2 mt-6">
         {{if gt $d.Page 1}}
-        <a href="?page={{sub $d.Page 1}}{{if $d.Status}}&status={{$d.Status}}{{end}}" class="btn-secondary text-sm">上一页</a>
+        <a href="?page={{sub $d.Page 1}}{{if $d.Status}}&status={{$d.Status}}{{end}}{{if $d.Keyword}}&keyword={{$d.Keyword}}{{end}}" class="btn-secondary text-sm">上一页</a>
         {{end}}
         <span class="text-sm text-slate-500">第 {{$d.Page}} / {{$d.TotalPages}} 页</span>
         {{if lt $d.Page $d.TotalPages}}
-        <a href="?page={{add $d.Page 1}}{{if $d.Status}}&status={{$d.Status}}{{end}}" class="btn-secondary text-sm">下一页</a>
+        <a href="?page={{add $d.Page 1}}{{if $d.Status}}&status={{$d.Status}}{{end}}{{if $d.Keyword}}&keyword={{$d.Keyword}}{{end}}" class="btn-secondary text-sm">下一页</a>
         {{end}}
     </div>
     {{end}}
+
+    <!-- Detail modal -->
+    <div x-show="detail !== null" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="detail = null">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 sticky top-0 bg-white">
+                <h3 class="text-base font-semibold text-slate-900" x-text="'留言详情 — ' + (detail ? detail.name : '')"></h3>
+                <button @click="detail = null" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-5 space-y-4" x-show="detail !== null">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div><span class="text-slate-400">姓名</span><p class="text-slate-900 font-medium" x-text="detail.name"></p></div>
+                    <div><span class="text-slate-400">邮箱</span><p class="text-slate-900" x-text="detail.email"></p></div>
+                    <div><span class="text-slate-400">电话</span><p class="text-slate-900" x-text="detail.phone || '-'"></p></div>
+                    <div><span class="text-slate-400">公司</span><p class="text-slate-900" x-text="detail.company || '-'"></p></div>
+                    <div><span class="text-slate-400">服务类型</span><p class="text-slate-900" x-text="detail.serviceType || '-'"></p></div>
+                    <div><span class="text-slate-400">预算</span><p class="text-slate-900" x-text="detail.budget || '-'"></p></div>
+                    <div class="col-span-2"><span class="text-slate-400">时间</span><p class="text-slate-900" x-text="detail.createdAt"></p></div>
+                    <div class="col-span-2"><span class="text-slate-400">状态</span><p class="font-medium" x-text="detail.status === 'pending' ? '待处理' : (detail.status === 'contacted' ? '已联系' : '已关闭')" :class="detail.status === 'pending' ? 'text-amber-600' : (detail.status === 'contacted' ? 'text-blue-600' : 'text-slate-600')"></p></div>
+                    <div class="col-span-2"><span class="text-slate-400">留言内容</span><p class="text-slate-900 mt-1 whitespace-pre-wrap text-sm bg-slate-50 rounded-lg p-3" x-text="detail.message"></p></div>
+                </div>
+                <div class="flex items-center gap-2 pt-4 border-t border-slate-100">
+                    <template x-if="detail && detail.status !== 'contacted'">
+                        <form method="POST" action="/admin/messages/update" class="inline">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                            <input type="hidden" name="id" :value="detail.id">
+                            <input type="hidden" name="status" value="contacted">
+                            <button type="submit" class="btn-secondary text-sm">标记已联系</button>
+                        </form>
+                    </template>
+                    <template x-if="detail && detail.status !== 'closed'">
+                        <form method="POST" action="/admin/messages/update" class="inline">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                            <input type="hidden" name="id" :value="detail.id">
+                            <input type="hidden" name="status" value="closed">
+                            <button type="submit" class="btn-secondary text-sm">标记已关闭</button>
+                        </form>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {{end}}

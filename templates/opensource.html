@@ -1,77 +1,69 @@
 {{template "layout" .}}
 {{define "content"}}
-<section class="bg-gray-900 pt-32 pb-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">开源项目</h1>
-        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+<section class="hero-section tech-bg pt-32 pb-20">
+    <div class="tech-grid"></div>
+    <div class="tech-orb"><i></i></div>
+    <div class="tech-dots"></div>
+    <div class="tech-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">开源项目</h1>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto">
             用代码说话 · 我的开源贡献与开发能力
         </p>
     </div>
 </section>
 
-<section class="py-20 bg-gray-50">
+<section class="py-20 tech-soft">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {{if len .Data | eq 0}}
+        {{if eq (len .Data) 0}}
         <div class="text-center py-20">
             <div class="text-6xl mb-6">⭐</div>
-            <h3 class="text-2xl font-semibold text-gray-400 mb-2">开源项目持续更新中</h3>
-            <p class="text-gray-400">更多精彩项目，敬请期待</p>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-2">开源项目持续更新中</h3>
+            <p class="text-gray-500">更多精彩项目，敬请期待</p>
         </div>
         {{else}}
         <!-- Featured Projects -->
         {{range $p := .Data}}
         {{if eq $p.IsFeatured 1}}
-        <div class="bg-white rounded-2xl p-8 border border-gray-100 card-hover mb-6 group">
+        <div class="card p-7 mb-5">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div class="flex-1">
-                    <div class="flex items-center space-x-3 mb-3">
-                        <h3 class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600">{{$p.Name}}</h3>
-                        <span class="px-3 py-1 bg-yellow-50 text-yellow-700 text-xs font-medium rounded-full">推荐</span>
+                    <div class="flex items-center gap-3 mb-3">
+                        <h3 class="text-2xl font-bold text-gray-900">{{$p.Name}}</h3>
+                        <span class="px-2.5 py-0.5 bg-yellow-50 text-yellow-700 text-xs font-medium rounded-full">推荐</span>
                     </div>
-                    <p class="text-gray-500 leading-relaxed mb-4">{{$p.Description}}</p>
-                    <div class="flex flex-wrap items-center gap-4 text-sm">
-                        {{if $p.Language}}<span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full">{{$p.Language}}</span>{{end}}
-                        {{if $p.Stars}}<span class="text-gray-500">⭐ {{$p.Stars}}</span>{{end}}
-                        {{if $p.LicenseType}}<span class="text-gray-400">{{$p.LicenseType}}</span>{{end}}
+                    <p class="text-gray-700 leading-relaxed mb-4">{{$p.Description}}</p>
+                    <div class="flex flex-wrap items-center gap-3 text-sm">
+                        {{if $p.Language}}<span class="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full">{{$p.Language}}</span>{{end}}
+                        {{if $p.Stars}}<span class="text-gray-600">⭐ {{$p.Stars}}</span>{{end}}
+                        {{if $p.LicenseType}}<span class="text-gray-500">{{$p.LicenseType}}</span>{{end}}
                     </div>
                 </div>
-                <div class="flex items-center space-x-3">
-                    {{if $p.GithubURL}}
-                    <a href="{{$p.GithubURL}}" target="_blank" class="px-5 py-2.5 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors">
-                        GitHub →
-                    </a>
-                    {{end}}
-                </div>
+                {{if $p.GithubURL}}
+                <a href="{{$p.GithubURL}}" target="_blank" class="px-5 py-2.5 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition-colors">GitHub →</a>
+                {{end}}
             </div>
         </div>
         {{end}}
         {{end}}
 
         <!-- All Projects -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        <div class="reveal-stagger grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
             {{range $p := .Data}}
             {{if eq $p.IsFeatured 0}}
-            <div class="bg-white rounded-xl p-6 border border-gray-100 card-hover group">
-                <div class="flex items-start justify-between mb-3">
-                    <h3 class="font-semibold text-gray-900 group-hover:text-indigo-600">{{$p.Name}}</h3>
-                    {{if $p.Stars}}<span class="text-sm text-gray-400">⭐ {{$p.Stars}}</span>{{end}}
+            <div class="card p-6">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="font-semibold text-gray-900">{{$p.Name}}</h3>
+                    {{if $p.Stars}}<span class="text-sm text-gray-500">⭐ {{$p.Stars}}</span>{{end}}
                 </div>
-                <p class="text-gray-500 text-sm leading-relaxed mb-4">{{slice $p.Description 80}}</p>
+                <p class="text-gray-700 text-sm leading-relaxed mb-4">{{slice $p.Description 80}}</p>
                 <div class="flex flex-wrap items-center gap-2 text-xs">
-                    {{if $p.Language}}<span class="px-2 py-1 bg-gray-100 text-gray-500 rounded-full">{{$p.Language}}</span>{{end}}
-                    {{if $p.LicenseType}}<span class="text-gray-400">{{$p.LicenseType}}</span>{{end}}
-                    {{if $p.GithubURL}}<a href="{{$p.GithubURL}}" target="_blank" class="text-indigo-600 hover:text-indigo-700">查看 →</a>{{end}}
+                    {{if $p.Language}}<span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">{{$p.Language}}</span>{{end}}
+                    {{if $p.LicenseType}}<span class="text-gray-500">{{$p.LicenseType}}</span>{{end}}
+                    {{if $p.GithubURL}}<a href="{{$p.GithubURL}}" target="_blank" class="text-primary font-medium hover:underline ml-auto">查看 →</a>{{end}}
                 </div>
             </div>
             {{end}}
             {{end}}
-        </div>
-
-        <!-- GitHub CTA -->
-        <div class="text-center mt-12">
-            <a href="https://github.com" target="_blank" class="inline-flex items-center space-x-2 text-gray-500 hover:text-gray-700">
-                <span>查看更多开源项目 →</span>
-            </a>
         </div>
         {{end}}
     </div>

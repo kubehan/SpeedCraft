@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -134,6 +135,22 @@ func migrate() error {
 			is_published INTEGER DEFAULT 1,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS tags (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT UNIQUE NOT NULL,
+			slug TEXT UNIQUE NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS pages (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT NOT NULL,
+			slug TEXT UNIQUE NOT NULL,
+			content TEXT NOT NULL,
+			content_type TEXT DEFAULT 'markdown',
+			is_published INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 	}
 
 	for _, q := range tables {
@@ -178,6 +195,7 @@ func seedDefaults() error {
 		"stats_response_label":  "响应时效",
 		"philosophy_title":      "我们的理念",
 		"philosophy_desc":       "快速 · 落地 · 交付 — 不做重理论，只做能跑的代码、能用的系统。你出想法，我出技术和执行力。",
+		"theme_preset":          "indigo",
 	}
 
 	for key, value := range defaults {
@@ -319,6 +337,15 @@ func seedDefaults() error {
 		for _, p := range projects {
 			DB.Exec("INSERT INTO open_source_projects (name, description, url, github_url, stars, language, license_type, is_featured, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
 				p.name, p.desc, p.url, p.github, p.lang, p.license, p.stars, p.featured, p.order)
+		}
+	}
+
+	DB.QueryRow("SELECT COUNT(*) FROM tags").Scan(&count)
+	if count == 0 {
+		tagNames := []string{"高可用", "架构设计", "SRE", "Kubernetes", "排障", "运维", "Terraform", "IaC", "最佳实践", "MVP", "创业", "技术选型"}
+		for _, name := range tagNames {
+			slug := strings.ToLower(strings.ReplaceAll(name, " ", "-"))
+			DB.Exec("INSERT INTO tags (name, slug) VALUES (?, ?)", name, slug)
 		}
 	}
 

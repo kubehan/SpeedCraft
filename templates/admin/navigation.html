@@ -1,45 +1,105 @@
 {{template "admin_layout" .}}
 {{define "admin_content"}}
-<div>
+{{$d := .Data}}
+{{$edit := $d.edit}}
+<div x-data="{ saving: false, changed: false }">
     <div class="flex items-center justify-between mb-6">
-        <div><h1 class="text-xl font-bold text-slate-900">导航管理</h1><p class="text-sm text-slate-500 mt-0.5">配置网站顶部导航菜单</p></div>
+        <div><h1 class="text-xl font-bold text-slate-900">导航管理</h1><p class="text-sm text-slate-500 mt-0.5">配置网站顶部导航菜单 — 拖拽行首 ⠿ 手柄排序后点击保存</p></div>
+        <div class="flex items-center gap-2">
+            <span x-show="changed" class="text-sm text-amber-600 font-medium">排序已更改</span>
+            <button x-show="changed" @click="saveOrder" :disabled="saving" class="btn-primary text-sm">
+                <span x-text="saving ? '保存中...' : '💾 保存排序'"></span>
+            </button>
+        </div>
     </div>
     <div class="page-card">
         <div class="page-card-header bg-slate-50/50">
-            <span class="text-sm font-medium text-slate-700">添加导航项</span>
+            <span class="text-sm font-medium text-slate-700">{{if $edit.ID}}编辑{{else}}添加{{end}}导航项</span>
         </div>
         <div class="page-card-body">
             <form method="POST" action="/admin/navigation/save" class="flex flex-wrap items-end gap-3">
-                <div><label class="form-label">图标</label><input type="text" name="icon" class="form-input w-16" placeholder="🏠"></div>
-                <div class="flex-1 min-w-[120px]"><label class="form-label">名称</label><input type="text" name="label" required class="form-input" placeholder="菜单名"></div>
-                <div class="flex-1 min-w-[160px]"><label class="form-label">链接</label><input type="text" name="url" required class="form-input" placeholder="/page"></div>
-                <div><label class="form-label">排序</label><input type="number" name="sort_order" value="0" class="form-input w-16"></div>
-                <div><label class="form-label">发布</label><select name="is_published" class="form-input bg-white"><option value="1">是</option><option value="0">否</option></select></div>
-                <button type="submit" class="btn-primary">添加</button>
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                {{if $edit.ID}}<input type="hidden" name="id" value="{{$edit.ID}}">{{end}}
+                <div><label class="form-label">图标</label><input type="text" name="icon" class="form-input w-16" placeholder="🏠" value="{{$edit.Icon}}"></div>
+                <div class="flex-1 min-w-[120px]"><label class="form-label">名称</label><input type="text" name="label" required class="form-input" placeholder="菜单名" value="{{$edit.Label}}"></div>
+                <div class="flex-1 min-w-[200px]">
+                    <label class="form-label">链接 <span class="text-slate-400 text-xs font-normal">(可选已有页面)</span></label>
+                    <div class="flex gap-1">
+                        <input type="text" id="nav-url" name="url" required class="form-input flex-1" placeholder="/page-slug 或 https://..." value="{{$edit.URL}}">
+                        {{if $d.pages}}
+                        <select onchange="if(this.value){document.getElementById('nav-url').value=this.value;this.value='';}" class="form-input w-32 bg-white">
+                            <option value="">选择页面</option>
+                            {{range $pg := $d.pages}}<option value="/page/{{$pg.Slug}}">{{$pg.Title}}</option>{{end}}
+                        </select>
+                        {{end}}
+                    </div>
+                </div>
+                <div><label class="form-label">排序</label><input type="number" name="sort_order" value="{{$edit.SortOrder}}" class="form-input w-16"></div>
+                <div><label class="form-label">发布</label><select name="is_published" class="form-input bg-white"><option value="1" {{if eq $edit.Published 1}}selected{{end}}>是</option><option value="0" {{if eq $edit.Published 0}}selected{{end}}>否</option></select></div>
+                <button type="submit" class="btn-primary">{{if $edit.ID}}保存{{else}}添加{{end}}</button>
+                {{if $edit.ID}}<a href="/admin/navigation" class="btn-secondary">取消</a>{{end}}
             </form>
         </div>
         <table class="data-table">
             <thead><tr>
-                <th class="w-16">排序</th>
+                <th class="w-10"></th>
                 <th class="w-16">图标</th>
                 <th>名称</th>
                 <th>链接</th>
                 <th class="w-20">状态</th>
-                <th class="w-20">操作</th>
+                <th class="w-24">操作</th>
             </tr></thead>
-            <tbody>
-                {{range $n := .Data}}
-                <tr>
-                    <td class="text-slate-400">{{$n.SortOrder}}</td>
+            <tbody id="nav-sortable">
+                {{range $n := $d.items}}
+                <tr data-id="{{$n.ID}}">
+                    <td class="text-slate-300 cursor-grab active:cursor-grabbing hover:text-slate-500 text-lg drag-handle">⠿</td>
                     <td class="text-lg">{{$n.Icon}}</td>
                     <td class="font-medium text-slate-900">{{$n.Label}}</td>
                     <td class="text-slate-500 font-mono text-xs">{{$n.URL}}</td>
-                    <td>{{if eq $n.Published 1}}<span class="badge badge-green">显示</span>{{else}}<span class="badge badge-gray">隐藏</span>{{end}}</td>
-                    <td><a href="/admin/navigation/delete?id={{$n.ID}}" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('确定删除？')">删除</a></td>
+                    <td><span class="badge cursor-pointer {{if eq $n.Published 1}}badge-green{{else}}badge-gray{{end}}" onclick="togglePublish('navigation_items', {{$n.ID}}, this)">{{if eq $n.Published 1}}显示{{else}}隐藏{{end}}</span></td>
+                    <td class="flex gap-2">
+                        <a href="/admin/navigation?id={{$n.ID}}" class="text-indigo-600 hover:text-indigo-800 text-sm">编辑</a>
+                        <a href="/admin/navigation/delete?id={{$n.ID}}" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('确定删除？')">删除</a>
+                    </td>
                 </tr>
                 {{end}}
             </tbody>
         </table>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('nav-sortable');
+    if (!el) return;
+    var alpine = document.querySelector('[x-data]');
+    new Sortable(el, {
+        handle: '.drag-handle',
+        animation: 200,
+        onEnd: function() {
+            if (alpine) alpine.__x.$data.changed = true;
+        }
+    });
+});
+function saveOrder() {
+    var el = document.getElementById('nav-sortable');
+    if (!el) return;
+    var alpine = document.querySelector('[x-data]');
+    if (alpine) { alpine.__x.$data.saving = true; alpine.__x.$data.changed = false; }
+    var ids = Array.from(el.querySelectorAll('tr')).map(function(tr) { return tr.dataset.id; });
+    var formData = new URLSearchParams();
+    ids.forEach(function(id) { formData.append('ids', id); });
+    formData.append('csrf_token', '{{.CSRFToken}}');
+    fetch('/admin/navigation/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData
+    }).then(function(r) {
+        if (alpine) alpine.__x.$data.saving = false;
+        if (!r.ok) { if (alpine) alpine.__x.$data.changed = true; alert('保存失败'); }
+    }).catch(function() {
+        if (alpine) { alpine.__x.$data.saving = false; alpine.__x.$data.changed = true; }
+        alert('保存失败');
+    });
+}
+</script>
 {{end}}

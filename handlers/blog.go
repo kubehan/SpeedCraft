@@ -26,7 +26,7 @@ func Blog(cfg *config.Config) http.HandlerFunc {
 		if posts == nil {
 			posts = []models.BlogPost{}
 		}
-		render(w, "blog.html", PageData{
+		render(w, r, "blog.html", PageData{
 			Title:   "博客 · " + models.GetSetting("site_name"),
 			Site:    cfg,
 			Data:    posts,
@@ -52,7 +52,7 @@ func BlogPost(cfg *config.Config) http.HandlerFunc {
 		models.IncrementPostViews(post.ID)
 		post.Views++
 
-		render(w, "blog_post.html", PageData{
+		render(w, r, "blog_post.html", PageData{
 			Title:   post.Title + " · " + models.GetSetting("site_name"),
 			Site:    cfg,
 			Data:    map[string]interface{}{

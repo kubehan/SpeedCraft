@@ -57,7 +57,7 @@ func AdminDashboardStats(cfg *config.Config) http.HandlerFunc {
 			}
 		}
 
-		render(w, "admin/dashboard.html", PageData{
+		render(w, r, "admin/dashboard.html", PageData{
 			Title:   "管理后台 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "dashboard",
@@ -80,15 +80,21 @@ func AdminDashboardStats(cfg *config.Config) http.HandlerFunc {
 // -------- Services CRUD --------
 func AdminServices(cfg *config.Config) http.HandlerFunc {
 	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
-		list, _ := models.GetServices()
-		if list == nil {
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		if page < 1 {
+			page = 1
+		}
+		pageSize := 50
+		list, total, err := models.GetServicesPage(page, pageSize)
+		if err != nil {
 			list = []models.Service{}
 		}
-		render(w, "admin/services.html", PageData{
+		totalPages := (total + pageSize - 1) / pageSize
+		render(w, r, "admin/services.html", PageData{
 			Title:   "服务管理 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "services",
-			Data:    list,
+			Data:    map[string]interface{}{"items": list, "Page": page, "TotalPages": totalPages, "Total": total},
 		})
 	})
 }
@@ -103,14 +109,14 @@ func AdminServiceEdit(cfg *config.Config) http.HandlerFunc {
 		}
 		if svc == nil {
 			svc = &models.Service{IsPublished: 1}
-			render(w, "admin/service_form.html", PageData{
+			render(w, r, "admin/service_form.html", PageData{
 				Title:   "新增服务 · " + cfg.SiteName,
 				Site:    cfg,
 				Current: "services",
 				Data:    svc,
 			})
 		} else {
-			render(w, "admin/service_form.html", PageData{
+			render(w, r, "admin/service_form.html", PageData{
 				Title:   "编辑服务 · " + cfg.SiteName,
 				Site:    cfg,
 				Current: "services",
@@ -161,15 +167,21 @@ func AdminServiceDelete(cfg *config.Config) http.HandlerFunc {
 // -------- Blog CRUD --------
 func AdminPosts(cfg *config.Config) http.HandlerFunc {
 	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
-		list, _ := models.GetAllPosts()
-		if list == nil {
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		if page < 1 {
+			page = 1
+		}
+		pageSize := 50
+		list, total, err := models.GetAllPostsPage(page, pageSize)
+		if err != nil {
 			list = []models.BlogPost{}
 		}
-		render(w, "admin/posts.html", PageData{
+		totalPages := (total + pageSize - 1) / pageSize
+		render(w, r, "admin/posts.html", PageData{
 			Title:   "文章管理 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "posts",
-			Data:    list,
+			Data:    map[string]interface{}{"items": list, "Page": page, "TotalPages": totalPages, "Total": total},
 		})
 	})
 }
@@ -185,7 +197,7 @@ func AdminPostEdit(cfg *config.Config) http.HandlerFunc {
 		if post == nil {
 			post = &models.BlogPost{ContentType: "markdown", IsPublished: 0}
 		}
-		render(w, "admin/post_form.html", PageData{
+		render(w, r, "admin/post_form.html", PageData{
 			Title:   "编辑文章 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "posts",
@@ -252,15 +264,21 @@ func AdminPostDelete(cfg *config.Config) http.HandlerFunc {
 // -------- Projects CRUD --------
 func AdminProjects(cfg *config.Config) http.HandlerFunc {
 	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
-		list, _ := models.GetAllProjects()
-		if list == nil {
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		if page < 1 {
+			page = 1
+		}
+		pageSize := 50
+		list, total, err := models.GetAllProjectsPage(page, pageSize)
+		if err != nil {
 			list = []models.Project{}
 		}
-		render(w, "admin/projects.html", PageData{
+		totalPages := (total + pageSize - 1) / pageSize
+		render(w, r, "admin/projects.html", PageData{
 			Title:   "项目管理 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "projects",
-			Data:    list,
+			Data:    map[string]interface{}{"items": list, "Page": page, "TotalPages": totalPages, "Total": total},
 		})
 	})
 }
@@ -276,7 +294,7 @@ func AdminProjectEdit(cfg *config.Config) http.HandlerFunc {
 		if p == nil {
 			p = &models.Project{IsPublished: 0}
 		}
-		render(w, "admin/project_form.html", PageData{
+		render(w, r, "admin/project_form.html", PageData{
 			Title:   "编辑项目 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "projects",
@@ -333,15 +351,21 @@ func AdminProjectDelete(cfg *config.Config) http.HandlerFunc {
 // -------- Open Source CRUD --------
 func AdminOpenSource(cfg *config.Config) http.HandlerFunc {
 	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
-		list, _ := models.GetOpenSourceProjects()
-		if list == nil {
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		if page < 1 {
+			page = 1
+		}
+		pageSize := 50
+		list, total, err := models.GetOpenSourceProjectsPage(page, pageSize)
+		if err != nil {
 			list = []models.OpenSourceProject{}
 		}
-		render(w, "admin/opensource.html", PageData{
+		totalPages := (total + pageSize - 1) / pageSize
+		render(w, r, "admin/opensource.html", PageData{
 			Title:   "开源项目管理 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "opensource",
-			Data:    list,
+			Data:    map[string]interface{}{"items": list, "Page": page, "TotalPages": totalPages, "Total": total},
 		})
 	})
 }
@@ -357,7 +381,7 @@ func AdminOpenSourceEdit(cfg *config.Config) http.HandlerFunc {
 		if p == nil {
 			p = &models.OpenSourceProject{IsPublished: 1}
 		}
-		render(w, "admin/opensource_form.html", PageData{
+		render(w, r, "admin/opensource_form.html", PageData{
 			Title:   "编辑开源项目 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "opensource",
@@ -420,11 +444,28 @@ func AdminNavigation(cfg *config.Config) http.HandlerFunc {
 		if list == nil {
 			list = []models.NavItem{}
 		}
-		render(w, "admin/navigation.html", PageData{
+		pages, _ := models.GetPublishedPages()
+		if pages == nil {
+			pages = []models.Page{}
+		}
+
+		editItem := &models.NavItem{}
+		if idStr := r.URL.Query().Get("id"); idStr != "" {
+			if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+				for _, n := range list {
+					if n.ID == id {
+						editItem = &n
+						break
+					}
+				}
+			}
+		}
+
+		render(w, r, "admin/navigation.html", PageData{
 			Title:   "导航管理 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "navigation",
-			Data:    list,
+			Data:    map[string]interface{}{"items": list, "edit": editItem, "pages": pages},
 		})
 	})
 }
@@ -466,6 +507,29 @@ func AdminNavigationDelete(cfg *config.Config) http.HandlerFunc {
 	})
 }
 
+func AdminNavigationReorder(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			respondJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
+			return
+		}
+		r.ParseForm()
+		idsStr := r.Form["ids"]
+		var ids []int64
+		for _, s := range idsStr {
+			id, err := strconv.ParseInt(s, 10, 64)
+			if err == nil {
+				ids = append(ids, id)
+			}
+		}
+		if err := models.ReorderNavigation(ids); err != nil {
+			respondJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		respondJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	})
+}
+
 // -------- Settings --------
 func AdminSettings(cfg *config.Config) http.HandlerFunc {
 	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
@@ -473,7 +537,7 @@ func AdminSettings(cfg *config.Config) http.HandlerFunc {
 		if settings == nil {
 			settings = make(map[string]string)
 		}
-		render(w, "admin/settings.html", PageData{
+		render(w, r, "admin/settings.html", PageData{
 			Title:   "站点设置 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "settings",
@@ -491,9 +555,10 @@ func AdminSettingsSave(cfg *config.Config) http.HandlerFunc {
 		r.ParseForm()
 		settings := make(map[string]string)
 		for key := range r.Form {
-			if key != "id" {
-				settings[key] = r.FormValue(key)
+			if key == "id" || key == "csrf_token" {
+				continue
 			}
+			settings[key] = r.FormValue(key)
 		}
 		if err := models.SaveSettings(settings); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -510,11 +575,22 @@ func AdminSkills(cfg *config.Config) http.HandlerFunc {
 		if list == nil {
 			list = []models.Skill{}
 		}
-		render(w, "admin/skills.html", PageData{
+		var editItem models.Skill
+		if idStr := r.URL.Query().Get("id"); idStr != "" {
+			if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+				for _, s := range list {
+					if s.ID == id {
+						editItem = s
+						break
+					}
+				}
+			}
+		}
+		render(w, r, "admin/skills.html", PageData{
 			Title:   "技能管理 · " + cfg.SiteName,
 			Site:    cfg,
 			Current: "skills",
-			Data:    list,
+			Data:    map[string]interface{}{"items": list, "edit": editItem},
 		})
 	})
 }
@@ -566,10 +642,10 @@ func AdminUpload(cfg *config.Config) http.HandlerFunc {
 
 			files, _ := os.ReadDir(uploadDir)
 			type fileInfo struct {
-				Name string
-				URL  string
-				Size int64
-				Ext  string
+				Name string `json:"name"`
+				URL  string `json:"url"`
+				Size int64  `json:"size"`
+				Ext  string `json:"ext"`
 			}
 			var fileList []fileInfo
 			for _, f := range files {
@@ -585,7 +661,12 @@ func AdminUpload(cfg *config.Config) http.HandlerFunc {
 				}
 			}
 
-			render(w, "admin/upload.html", PageData{
+			if r.URL.Query().Get("list") == "json" {
+				respondJSON(w, http.StatusOK, fileList)
+				return
+			}
+
+			render(w, r, "admin/upload.html", PageData{
 				Title:   "文件上传 · " + cfg.SiteName,
 				Site:    cfg,
 				Current: "upload",
@@ -623,9 +704,26 @@ func AdminUpload(cfg *config.Config) http.HandlerFunc {
 	})
 }
 
+// -------- File Delete --------
+func AdminUploadDelete(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+		if name == "" || strings.Contains(name, "..") || strings.Contains(name, "/") {
+			respondJSON(w, http.StatusBadRequest, map[string]string{"error": "无效文件名"})
+			return
+		}
+		path := filepath.Join("static/uploads", name)
+		if err := os.Remove(path); err != nil {
+			respondJSON(w, http.StatusInternalServerError, map[string]string{"error": "删除失败"})
+			return
+		}
+		http.Redirect(w, r, "/admin/upload", http.StatusSeeOther)
+	})
+}
+
 // -------- Markdown Preview --------
 func AdminMarkdownPreview(cfg *config.Config) http.HandlerFunc {
-	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	return SessionOnlyMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -641,5 +739,184 @@ func AdminMarkdownPreview(cfg *config.Config) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte(buf.String()))
+	})
+}
+
+func AdminTogglePublish(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			respondJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
+			return
+		}
+		table := r.FormValue("table")
+		idStr := r.FormValue("id")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+			return
+		}
+		validTables := map[string]bool{"services": true, "blog_posts": true, "projects": true, "open_source_projects": true, "skills": true, "navigation_items": true}
+		if !validTables[table] {
+			respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid table"})
+			return
+		}
+		newVal, err := models.TogglePublish(table, id)
+		if err != nil {
+			respondJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		respondJSON(w, http.StatusOK, map[string]interface{}{"published": newVal})
+	})
+}
+
+func AdminTags(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			name := strings.TrimSpace(r.FormValue("name"))
+			if name == "" {
+				http.Redirect(w, r, "/admin/tags?error=名称不能为空", http.StatusSeeOther)
+				return
+			}
+			slug := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(name, " ", "-"), "/", "-"))
+			_, err := models.CreateTag(name, slug)
+			if err != nil {
+				http.Redirect(w, r, "/admin/tags?error=标签已存在", http.StatusSeeOther)
+				return
+			}
+			http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
+			return
+		}
+		list, _ := models.GetAllTags()
+		if list == nil {
+			list = []models.Tag{}
+		}
+		render(w, r, "admin/tags.html", PageData{
+			Title:   "标签管理 · " + cfg.SiteName,
+			Site:    cfg,
+			Current: "tags",
+			Data:    list,
+		})
+	})
+}
+
+func AdminTagDelete(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		idStr := r.URL.Query().Get("id")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			http.Redirect(w, r, "/admin/tags?error=无效ID", http.StatusSeeOther)
+			return
+		}
+		models.DeleteTag(id)
+		http.Redirect(w, r, "/admin/tags", http.StatusSeeOther)
+	})
+}
+
+func AdminTagsJSON(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		list, err := models.GetAllTags()
+		if err != nil {
+			list = []models.Tag{}
+		}
+		respondJSON(w, http.StatusOK, map[string]interface{}{"tags": list})
+	})
+}
+
+func AdminBatchAction(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			respondJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
+			return
+		}
+		table := r.FormValue("table")
+		action := r.FormValue("action")
+		idsStr := r.FormValue("ids")
+		if idsStr == "" {
+			respondJSON(w, http.StatusBadRequest, map[string]string{"error": "No IDs provided"})
+			return
+		}
+		parts := strings.Split(idsStr, ",")
+		var ids []int64
+		for _, p := range parts {
+			id, err := strconv.ParseInt(strings.TrimSpace(p), 10, 64)
+			if err == nil {
+				ids = append(ids, id)
+			}
+		}
+		if len(ids) == 0 {
+			respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid IDs"})
+			return
+		}
+		if err := models.BatchAction(table, action, ids); err != nil {
+			respondJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		respondJSON(w, http.StatusOK, map[string]string{"ok": "ok"})
+	})
+}
+
+// -------- Page CRUD --------
+func AdminPages(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		list, _ := models.GetAllPages()
+		if list == nil {
+			list = []models.Page{}
+		}
+		var editItem models.Page
+		if idStr := r.URL.Query().Get("id"); idStr != "" {
+			if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+				for _, p := range list {
+					if p.ID == id {
+						editItem = p
+						break
+					}
+				}
+			}
+		}
+		render(w, r, "admin/pages.html", PageData{
+			Title:   "页面管理 · " + cfg.SiteName,
+			Site:    cfg,
+			Current: "pages",
+			Data:    map[string]interface{}{"items": list, "edit": editItem},
+		})
+	})
+}
+
+func AdminPageSave(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
+		published := 0
+		if r.FormValue("is_published") == "1" {
+			published = 1
+		}
+		slug := strings.TrimSpace(r.FormValue("slug"))
+		if slug == "" {
+			slug = strings.ToLower(strings.ReplaceAll(strings.TrimSpace(r.FormValue("title")), " ", "-"))
+		}
+		_, err := models.SavePage(&models.Page{
+			ID:          id,
+			Title:       r.FormValue("title"),
+			Slug:        slug,
+			Content:     r.FormValue("content"),
+			ContentType: r.FormValue("content_type"),
+			IsPublished: published,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/admin/pages", http.StatusSeeOther)
+	})
+}
+
+func AdminPageDelete(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+		models.DeletePage(id)
+		http.Redirect(w, r, "/admin/pages", http.StatusSeeOther)
 	})
 }

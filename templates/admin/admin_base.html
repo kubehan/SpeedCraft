@@ -7,6 +7,49 @@
     <title>{{.Title}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+    function togglePublish(table, id, el) {
+        var csrfToken = '{{.CSRFToken}}';
+        var form = new URLSearchParams();
+        form.append('table', table);
+        form.append('id', id);
+        form.append('csrf_token', csrfToken);
+        fetch('/admin/toggle-publish', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: form
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.published === 1) {
+                el.className = 'badge badge-green cursor-pointer';
+                el.textContent = '已发布';
+            } else {
+                el.className = 'badge badge-gray cursor-pointer';
+                el.textContent = '未发布';
+            }
+        });
+    }
+    function batchAction(table, action) {
+        var checks = document.querySelectorAll('.batch-check:checked');
+        var ids = Array.from(checks).map(function(c) { return c.value; }).join(',');
+        if (!ids) { alert('请先选择项目'); return; }
+        var msg = action === 'delete' ? '确定删除选中的项目？' : '确定执行批量操作？';
+        if (!confirm(msg)) return;
+        var form = new URLSearchParams();
+        form.append('table', table);
+        form.append('action', action);
+        form.append('ids', ids);
+        form.append('csrf_token', '{{.CSRFToken}}');
+        fetch('/admin/batch', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: form
+        }).then(function(r) { return r.json(); }).then(function() { location.reload(); });
+    }
+    function toggleAll(source) {
+        document.querySelectorAll('.batch-check').forEach(function(c) { c.checked = source.checked; });
+    }
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <style>
         [x-cloak] { display: none !important; }
@@ -31,6 +74,7 @@
         .badge-blue { background: #dbeafe; color: #2563eb; }
         .badge-gray { background: #f1f5f9; color: #64748b; }
         .badge-purple { background: #f3e8ff; color: #9333ea; }
+        input[type="checkbox"].batch-toggle { width: 1rem; height: 1rem; border-radius: 0.25rem; border: 1px solid #cbd5e1; cursor: pointer; accent-color: #6366f1; }
         table.data-table { width: 100%; font-size: 0.875rem; }
         table.data-table thead { background: #f8fafc; }
         table.data-table th { text-align: left; padding: 0.75rem 1rem; font-weight: 500; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f1f5f9; }

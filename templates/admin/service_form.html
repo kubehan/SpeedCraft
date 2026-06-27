@@ -7,6 +7,7 @@
         <h1 class="text-xl font-bold text-slate-900 mt-1">{{if gt $s.ID 0}}编辑服务{{else}}新增服务{{end}}</h1>
     </div>
     <form method="POST" action="/admin/services/save" class="page-card">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <div class="page-card-body space-y-5">
             {{if gt $s.ID 0}}<input type="hidden" name="id" value="{{$s.ID}}">{{end}}
             <div class="grid md:grid-cols-2 gap-5">

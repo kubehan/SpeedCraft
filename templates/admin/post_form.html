@@ -7,6 +7,7 @@
         <h1 class="text-xl font-bold text-slate-900 mt-1">{{if gt $p.ID 0}}编辑文章{{else}}写文章{{end}}</h1>
     </div>
     <form method="POST" action="/admin/posts/save" class="space-y-5" x-data="postEditor()">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         {{if gt $p.ID 0}}<input type="hidden" name="id" value="{{$p.ID}}">{{end}}
         <div class="page-card">
             <div class="page-card-body space-y-5">
@@ -22,11 +23,12 @@
                 <span class="text-sm font-medium text-slate-700">内容</span>
                 <div class="flex items-center gap-3">
                     <select name="content_type" x-model="contentType" class="form-input w-auto bg-white py-1.5"><option value="markdown" {{if eq $p.ContentType "markdown"}}selected{{end}}>Markdown</option><option value="html" {{if eq $p.ContentType "html"}}selected{{end}}>HTML</option></select>
+                    <button type="button" @click="openImagePicker" class="btn-secondary text-sm">📷 插入图片</button>
                     <button type="button" @click="preview" class="btn-secondary text-sm">预览</button>
                 </div>
             </div>
             <div class="page-card-body">
-                <textarea name="content" rows="20" x-model="content" class="form-input font-mono text-sm">{{$p.Content}}</textarea>
+                <textarea name="content" rows="20" x-model="content" class="form-input font-mono text-sm" id="post-content">{{$p.Content}}</textarea>
             </div>
         </div>
         <div x-show="showPreview" x-cloak class="page-card">
@@ -38,7 +40,15 @@
         <div class="page-card">
             <div class="page-card-body space-y-5">
                 <div class="grid md:grid-cols-2 gap-5">
-                    <div><label class="form-label">标签 (逗号分隔)</label><input type="text" name="tags" value="{{$p.Tags}}" class="form-input" placeholder="Kubernetes,运维,DevOps"></div>
+                    <div>
+                        <label class="form-label">标签 (逗号分隔)</label>
+                        <input type="text" name="tags" value="{{$p.Tags}}" x-model="tagsStr" class="form-input" placeholder="Kubernetes,运维,DevOps" id="post-tags">
+                        <div x-show="allTags.length > 0" class="mt-2 flex flex-wrap gap-1.5">
+                            <template x-for="tag in allTags" :key="tag.id">
+                                <span @click="addTag(tag.name)" class="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs cursor-pointer hover:bg-indigo-100 hover:text-indigo-700 transition-colors" x-text="tag.name"></span>
+                            </template>
+                        </div>
+                    </div>
                     <div><label class="form-label">发布状态</label><select name="is_published" class="form-input bg-white"><option value="0" {{if eq $p.IsPublished 0}}selected{{end}}>草稿</option><option value="1" {{if eq $p.IsPublished 1}}selected{{end}}>发布</option></select></div>
                 </div>
                 <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
@@ -48,6 +58,38 @@
             </div>
         </div>
     </form>
+
+    <!-- Image picker modal -->
+    <div x-show="showImagePicker" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showImagePicker = false">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                <h3 class="text-base font-semibold text-slate-900">选择图片</h3>
+                <button @click="showImagePicker = false" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 border-b border-slate-100">
+                <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center cursor-pointer hover:border-indigo-400 transition-colors"
+                     @dragover.prevent @drop.prevent="uploadFile($event)">
+                    <p class="text-sm text-slate-500">拖拽文件到此处或 <label class="text-indigo-600 hover:text-indigo-700 cursor-pointer">点击上传<input type="file" @change="uploadFile($event)" class="hidden" accept="image/*"></label></p>
+                    <p x-show="uploading" class="text-xs text-slate-400 mt-1">上传中...</p>
+                    <p x-show="!uploading && uploadedUrl" class="text-xs text-green-600 mt-1">上传成功!</p>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="grid grid-cols-4 gap-3" x-show="images.length > 0">
+                    <template x-for="img in images" :key="img.name">
+                        <div class="group relative aspect-square rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:border-indigo-400 transition-colors"
+                             @click="insertImage(img.url)">
+                            <img :src="img.url" class="w-full h-full object-cover" loading="lazy">
+                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                <span class="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">点击插入</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div x-show="images.length === 0" class="text-center text-slate-400 py-8 text-sm">暂无图片</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -55,10 +97,22 @@
         return {
             title: '{{$p.Title}}',
             slug: '{{$p.Slug}}',
-            content: {{$p.Content}},
+            csrfToken: '{{.CSRFToken}}',
+            content: {{json $p.Content}},
             contentType: '{{$p.ContentType}}',
             showPreview: false,
             previewHTML: '',
+            showImagePicker: false,
+            images: [],
+            uploading: false,
+            uploadedUrl: '',
+            tagsStr: '{{$p.Tags}}',
+            allTags: [],
+            init() { fetch('/admin/tags/json').then(r => r.json()).then(d => { this.allTags = d.tags || []; }).catch(() => {}); },
+            addTag(name) {
+                var current = this.tagsStr ? this.tagsStr.split(',').map(s => s.trim()) : [];
+                if (!current.includes(name)) { current.push(name); this.tagsStr = current.join(','); }
+            },
             slugifyTitle() {
                 if (!this.slug || this.slug === '{{$p.Slug}}') {
                     this.slug = this.title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '');
@@ -66,9 +120,40 @@
             },
             async preview() {
                 if (this.contentType === 'html') { this.previewHTML = this.content; this.showPreview = true; return; }
-                const res = await fetch('/admin/preview', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'content=' + encodeURIComponent(this.content) });
+                const res = await fetch('/admin/preview', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'csrf_token=' + encodeURIComponent(this.csrfToken) + '&content=' + encodeURIComponent(this.content) });
                 this.previewHTML = await res.text();
                 this.showPreview = true;
+            },
+            async openImagePicker() {
+                this.images = [];
+                this.showImagePicker = true;
+                this.uploadedUrl = '';
+                try {
+                    const res = await fetch('/admin/upload?list=json');
+                    this.images = await res.json();
+                } catch(e) { this.images = []; }
+            },
+            async uploadFile(ev) {
+                var file = ev.dataTransfer ? ev.dataTransfer.files[0] : ev.target.files[0];
+                if (!file) return;
+                this.uploading = true;
+                this.uploadedUrl = '';
+                var form = new FormData();
+                form.append('file', file);
+                form.append('csrf_token', this.csrfToken);
+                const res = await fetch('/admin/upload', { method: 'POST', body: form });
+                const data = await res.json();
+                this.uploading = false;
+                if (data.url) {
+                    this.images.push({ name: data.name, url: data.url });
+                    this.uploadedUrl = data.url;
+                    this.insertImage(data.url);
+                }
+            },
+            insertImage(url) {
+                var prefix = this.contentType === 'html' ? '<img src="' + url + '" alt="">' : '![](' + url + ')';
+                this.content += '\n' + prefix;
+                this.showImagePicker = false;
             }
         }
     }
