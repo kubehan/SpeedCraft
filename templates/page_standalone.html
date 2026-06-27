@@ -1,0 +1,8 @@
+{{template "layout" .}}
+{{define "content"}}
+{{$d := .Data}}
+{{if $d.css}}{{safeHTML $d.css}}{{end}}
+<div class="pt-16">
+    {{safeHTML $d.body}}
+</div>
+{{end}}

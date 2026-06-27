@@ -129,9 +129,9 @@ func InitTemplates() error {
 			}
 		},
 		"add": func(a, b int) int { return a + b },
-		"json": func(v interface{}) string {
+		"json": func(v interface{}) template.JS {
 			b, _ := json.Marshal(v)
-			return string(b)
+			return template.JS(b)
 		},
 		"sub": func(a, b int) int { return a - b },
 		"trim": func(s string) string { return strings.TrimSpace(s) },

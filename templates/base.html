@@ -8,6 +8,11 @@
     <title>{{.Title}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+    document.addEventListener('alpine:initialized', function() {
+        document.querySelectorAll('[x-cloak]').forEach(function(el) { el.removeAttribute('x-cloak'); });
+    });
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <style>
         {{themeCSS}}
