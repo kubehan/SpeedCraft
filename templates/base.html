@@ -321,16 +321,31 @@
 
         // Scroll reveal via IntersectionObserver
         (function() {
+            var revealEls = document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-zoom,.reveal-stagger');
+
+            // Immediately show elements already in viewport on load (avoid waiting for scroll)
+            function isInViewport(el) {
+                var rect = el.getBoundingClientRect();
+                return rect.top < (window.innerHeight || document.documentElement.clientHeight) && rect.bottom > 0;
+            }
+            revealEls.forEach(function(el) {
+                if (isInViewport(el)) el.classList.add('in');
+            });
+
             if (!('IntersectionObserver' in window)) {
-                document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-zoom,.reveal-stagger').forEach(function(el){el.classList.add('in');});
+                revealEls.forEach(function(el){el.classList.add('in');});
                 return;
             }
+            // threshold:0 = any pixel visible triggers (avoids issue with tall containers)
+            // rootMargin negative bottom: trigger slightly before reaching the element
             var io = new IntersectionObserver(function(entries) {
                 entries.forEach(function(e) {
                     if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
                 });
-            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-            document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-zoom,.reveal-stagger').forEach(function(el) { io.observe(el); });
+            }, { threshold: 0, rootMargin: '0px 0px -10% 0px' });
+            revealEls.forEach(function(el) {
+                if (!el.classList.contains('in')) io.observe(el);
+            });
         })();
     </script>
 </body>
