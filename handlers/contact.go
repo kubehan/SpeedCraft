@@ -88,7 +88,8 @@ func sendNotifications(req models.MessageRequest) {
 func sendWechatWebhook(webhook string, req models.MessageRequest) {
 	content := fmt.Sprintf(
 		"=== 速创社 新咨询 ===\n📌 姓名: %s\n📧 邮箱: %s\n📞 电话: %s\n🏢 公司: %s\n🔧 服务: %s\n💰 预算: %s\n📝 需求: %s",
-		req.Name, req.Email, req.Phone, req.Company, req.ServiceType, req.Budget, req.Message,
+		req.Name, req.Email, req.Phone, req.Company,
+		serviceLabel(req.ServiceType), budgetLabel(req.Budget), req.Message,
 	)
 
 	body, _ := json.Marshal(map[string]interface{}{
@@ -99,6 +100,54 @@ func sendWechatWebhook(webhook string, req models.MessageRequest) {
 	})
 
 	http.Post(webhook, "application/json", bytes.NewReader(body))
+}
+
+// serviceLabel converts legacy short codes to human-readable labels.
+// New submissions already store full titles like "MVP 极速开发", so we only need to map
+// the legacy codes that some old records / forms might still produce.
+func serviceLabel(v string) string {
+	if v == "" {
+		return "-"
+	}
+	legacy := map[string]string{
+		"mvp":             "MVP 极速开发",
+		"cloud":           "云架构设计",
+		"cicd":            "CI/CD 流水线",
+		"k8s":             "Kubernetes 运维",
+		"monitoring":      "监控体系建设",
+		"iac":             "基础设施即代码",
+		"code":            "代码开发",
+		"design":          "系统设计",
+		"solution":        "方案设计",
+		"security":        "安全等保 & 基线核查",
+		"xc":              "信创适配",
+		"cloud-migration": "服务上云 & 托管维护",
+		"consulting":      "DevOps 咨询与培训",
+		"other":           "其他",
+	}
+	if label, ok := legacy[v]; ok {
+		return label
+	}
+	return v
+}
+
+// budgetLabel converts budget short codes to human-readable labels.
+func budgetLabel(v string) string {
+	if v == "" {
+		return "-"
+	}
+	legacy := map[string]string{
+		"lt5k":      "¥5,000 以下",
+		"5k-20k":    "¥5,000 - ¥20,000",
+		"20k-50k":   "¥20,000 - ¥50,000",
+		"50k-100k":  "¥50,000 - ¥100,000",
+		"gt100k":    "¥100,000 以上",
+		"unknown":   "暂不确定",
+	}
+	if label, ok := legacy[v]; ok {
+		return label
+	}
+	return v
 }
 
 // SendGenericNotification sends a notification through configured channels (webhook + email)
@@ -149,7 +198,8 @@ func sendEmailNotification(to string, req models.MessageRequest) {
 	subject := fmt.Sprintf("[速创社] 新咨询来自 %s", req.Name)
 	body := fmt.Sprintf(
 		"姓名: %s\n邮箱: %s\n电话: %s\n公司: %s\n服务类型: %s\n预算: %s\n\n需求描述:\n%s",
-		req.Name, req.Email, req.Phone, req.Company, req.ServiceType, req.Budget, req.Message,
+		req.Name, req.Email, req.Phone, req.Company,
+		serviceLabel(req.ServiceType), budgetLabel(req.Budget), req.Message,
 	)
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", user, to, subject, body)
 
