@@ -152,6 +152,24 @@ func migrate() error {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS ads (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			slot TEXT NOT NULL,
+			ad_type TEXT DEFAULT 'image',
+			image_url TEXT DEFAULT '',
+			link_url TEXT DEFAULT '',
+			html_content TEXT DEFAULT '',
+			alt_text TEXT DEFAULT '',
+			start_at DATETIME,
+			end_at DATETIME,
+			sort_order INTEGER DEFAULT 0,
+			click_count INTEGER DEFAULT 0,
+			view_count INTEGER DEFAULT 0,
+			is_published INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 	}
 
 	for _, q := range tables {

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -924,4 +925,97 @@ func AdminPageDelete(cfg *config.Config) http.HandlerFunc {
 		models.DeletePage(id)
 		http.Redirect(w, r, "/admin/pages", http.StatusSeeOther)
 	})
+}
+
+// -------- Ad CRUD --------
+func AdminAds(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		list, _ := models.GetAllAds()
+		if list == nil {
+			list = []models.Ad{}
+		}
+		var editItem models.Ad
+		if idStr := r.URL.Query().Get("id"); idStr != "" {
+			if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+				if a, err := models.GetAdByID(id); err == nil && a != nil {
+					editItem = *a
+				}
+			}
+		}
+		render(w, r, "admin/ads.html", PageData{
+			Title:   "广告管理 · " + cfg.SiteName,
+			Site:    cfg,
+			Current: "ads",
+			Data:    map[string]interface{}{"items": list, "edit": editItem},
+		})
+	})
+}
+
+func AdminAdSave(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
+		sortOrder, _ := strconv.Atoi(r.FormValue("sort_order"))
+		published := 0
+		if r.FormValue("is_published") == "1" {
+			published = 1
+		}
+		ad := &models.Ad{
+			ID:          id,
+			Name:        r.FormValue("name"),
+			Slot:        r.FormValue("slot"),
+			AdType:      r.FormValue("ad_type"),
+			ImageURL:    r.FormValue("image_url"),
+			LinkURL:     r.FormValue("link_url"),
+			HTMLContent: r.FormValue("html_content"),
+			AltText:     r.FormValue("alt_text"),
+			SortOrder:   sortOrder,
+			IsPublished: published,
+		}
+		if s := strings.TrimSpace(r.FormValue("start_at")); s != "" {
+			if t, err := time.Parse("2006-01-02T15:04", s); err == nil {
+				ad.StartAt = sql.NullTime{Time: t, Valid: true}
+			}
+		}
+		if s := strings.TrimSpace(r.FormValue("end_at")); s != "" {
+			if t, err := time.Parse("2006-01-02T15:04", s); err == nil {
+				ad.EndAt = sql.NullTime{Time: t, Valid: true}
+			}
+		}
+		if _, err := models.SaveAd(ad); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/admin/ads", http.StatusSeeOther)
+	})
+}
+
+func AdminAdDelete(cfg *config.Config) http.HandlerFunc {
+	return AdminMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		id, _ := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+		models.DeleteAd(id)
+		http.Redirect(w, r, "/admin/ads", http.StatusSeeOther)
+	})
+}
+
+// AdClick records a click and redirects to the ad's link
+func AdClick(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := r.PathValue("id")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		ad, err := models.GetAdByID(id)
+		if err != nil || ad == nil || ad.LinkURL == "" {
+			http.NotFound(w, r)
+			return
+		}
+		models.IncrementAdClick(id)
+		http.Redirect(w, r, ad.LinkURL, http.StatusFound)
+	}
 }

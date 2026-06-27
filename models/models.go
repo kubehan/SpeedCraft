@@ -864,6 +864,106 @@ func DeletePage(id int64) error {
 	return err
 }
 
+// -------- Ad --------
+type Ad struct {
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Slot        string    `json:"slot"`
+	AdType      string    `json:"ad_type"`
+	ImageURL    string    `json:"image_url"`
+	LinkURL     string    `json:"link_url"`
+	HTMLContent string    `json:"html_content"`
+	AltText     string    `json:"alt_text"`
+	StartAt     sql.NullTime `json:"start_at"`
+	EndAt       sql.NullTime `json:"end_at"`
+	SortOrder   int       `json:"sort_order"`
+	ClickCount  int       `json:"click_count"`
+	ViewCount   int       `json:"view_count"`
+	IsPublished int       `json:"is_published"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func GetAllAds() ([]Ad, error) {
+	rows, err := database.DB.Query("SELECT id, name, slot, ad_type, image_url, link_url, html_content, alt_text, start_at, end_at, sort_order, click_count, view_count, is_published, created_at, updated_at FROM ads ORDER BY slot, sort_order ASC, id DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []Ad
+	for rows.Next() {
+		var a Ad
+		rows.Scan(&a.ID, &a.Name, &a.Slot, &a.AdType, &a.ImageURL, &a.LinkURL, &a.HTMLContent, &a.AltText, &a.StartAt, &a.EndAt, &a.SortOrder, &a.ClickCount, &a.ViewCount, &a.IsPublished, &a.CreatedAt, &a.UpdatedAt)
+		list = append(list, a)
+	}
+	return list, nil
+}
+
+func GetAdByID(id int64) (*Ad, error) {
+	var a Ad
+	err := database.DB.QueryRow("SELECT id, name, slot, ad_type, image_url, link_url, html_content, alt_text, start_at, end_at, sort_order, click_count, view_count, is_published, created_at, updated_at FROM ads WHERE id=?", id).
+		Scan(&a.ID, &a.Name, &a.Slot, &a.AdType, &a.ImageURL, &a.LinkURL, &a.HTMLContent, &a.AltText, &a.StartAt, &a.EndAt, &a.SortOrder, &a.ClickCount, &a.ViewCount, &a.IsPublished, &a.CreatedAt, &a.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+func GetActiveAdsBySlot(slot string) ([]Ad, error) {
+	rows, err := database.DB.Query(`
+		SELECT id, name, slot, ad_type, image_url, link_url, html_content, alt_text, start_at, end_at, sort_order, click_count, view_count, is_published, created_at, updated_at
+		FROM ads
+		WHERE slot=? AND is_published=1
+		  AND (start_at IS NULL OR start_at <= CURRENT_TIMESTAMP)
+		  AND (end_at IS NULL OR end_at >= CURRENT_TIMESTAMP)
+		ORDER BY sort_order ASC, id DESC`, slot)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []Ad
+	for rows.Next() {
+		var a Ad
+		rows.Scan(&a.ID, &a.Name, &a.Slot, &a.AdType, &a.ImageURL, &a.LinkURL, &a.HTMLContent, &a.AltText, &a.StartAt, &a.EndAt, &a.SortOrder, &a.ClickCount, &a.ViewCount, &a.IsPublished, &a.CreatedAt, &a.UpdatedAt)
+		list = append(list, a)
+	}
+	return list, nil
+}
+
+func SaveAd(a *Ad) (int64, error) {
+	if a.AdType == "" {
+		a.AdType = "image"
+	}
+	if a.ID > 0 {
+		_, err := database.DB.Exec(
+			`UPDATE ads SET name=?, slot=?, ad_type=?, image_url=?, link_url=?, html_content=?, alt_text=?, start_at=?, end_at=?, sort_order=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+			a.Name, a.Slot, a.AdType, a.ImageURL, a.LinkURL, a.HTMLContent, a.AltText, a.StartAt, a.EndAt, a.SortOrder, a.IsPublished, a.ID)
+		return a.ID, err
+	}
+	result, err := database.DB.Exec(
+		`INSERT INTO ads (name, slot, ad_type, image_url, link_url, html_content, alt_text, start_at, end_at, sort_order, is_published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		a.Name, a.Slot, a.AdType, a.ImageURL, a.LinkURL, a.HTMLContent, a.AltText, a.StartAt, a.EndAt, a.SortOrder, a.IsPublished)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func DeleteAd(id int64) error {
+	_, err := database.DB.Exec("DELETE FROM ads WHERE id=?", id)
+	return err
+}
+
+func IncrementAdClick(id int64) error {
+	_, err := database.DB.Exec("UPDATE ads SET click_count = click_count + 1 WHERE id=?", id)
+	return err
+}
+
+func IncrementAdView(id int64) error {
+	_, err := database.DB.Exec("UPDATE ads SET view_count = view_count + 1 WHERE id=?", id)
+	return err
+}
+
 func BatchAction(table, action string, ids []int64) error {
 	if len(ids) == 0 {
 		return nil

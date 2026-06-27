@@ -13,11 +13,17 @@ import (
 )
 
 type PageData struct {
-	Title     string
-	Site      *config.Config
-	Data      interface{}
-	Current   string
-	CSRFToken string
+	Title           string
+	Site            *config.Config
+	Data            interface{}
+	Current         string
+	CSRFToken       string
+	MetaDescription string
+	MetaKeywords    string
+	OGType          string
+	OGImage         string
+	CanonicalURL    string
+	JSONLD          string
 }
 
 type NavItem struct {
@@ -56,6 +62,9 @@ func InitTemplates() error {
 		"safeHTML": func(s string) template.HTML {
 			return template.HTML(s)
 		},
+		"safeJS": func(s string) template.JS {
+			return template.JS(s)
+		},
 		"navItems": func() []NavItem {
 			if items, err := models.GetPublishedNavigation(); err == nil && len(items) > 0 {
 				result := make([]NavItem, len(items))
@@ -84,6 +93,29 @@ func InitTemplates() error {
 		},
 		"getSetting": func(key string) string {
 			return models.GetSetting(key)
+		},
+		"adsBySlot": func(slot string) []models.Ad {
+			ads, err := models.GetActiveAdsBySlot(slot)
+			if err != nil {
+				return []models.Ad{}
+			}
+			// Increment view count async (fire & forget)
+			for _, a := range ads {
+				go models.IncrementAdView(a.ID)
+			}
+			return ads
+		},
+		"adSlots": func() []map[string]string {
+			return []map[string]string{
+				{"Key": "home_hero", "Label": "首页 Hero 下方"},
+				{"Key": "home_middle", "Label": "首页板块之间"},
+				{"Key": "home_bottom", "Label": "首页页脚上方"},
+				{"Key": "blog_top", "Label": "博客列表顶部"},
+				{"Key": "blog_post_top", "Label": "文章详情顶部"},
+				{"Key": "blog_post_bottom", "Label": "文章详情底部"},
+				{"Key": "sidebar", "Label": "侧边栏"},
+				{"Key": "global_top", "Label": "全站顶部条幅"},
+			}
 		},
 		"themePresets": func() []map[string]string {
 			return []map[string]string{
@@ -123,6 +155,7 @@ func InitTemplates() error {
 				{Key: "navigation", Label: "导航管理", URL: "/admin/navigation", Icon: "🗺️"},
 				{Key: "skills", Label: "技能管理", URL: "/admin/skills", Icon: "🎯"},
 				{Key: "tags", Label: "标签管理", URL: "/admin/tags", Icon: "🏷️"},
+				{Key: "ads", Label: "广告管理", URL: "/admin/ads", Icon: "📢"},
 				{Key: "settings", Label: "站点设置", URL: "/admin/settings", Icon: "⚙️"},
 				{Key: "messages", Label: "留言管理", URL: "/admin/messages", Icon: "💬"},
 				{Key: "upload", Label: "文件上传", URL: "/admin/upload", Icon: "📎"},
@@ -138,6 +171,15 @@ func InitTemplates() error {
 		"trimPrefix": func(s, prefix string) string { return strings.TrimPrefix(s, prefix) },
 		"div": func(a, b int64) int64 { return a / b },
 		"split": func(s, sep string) []string { return strings.Split(s, sep) },
+		"dict": func(values ...interface{}) map[string]interface{} {
+			d := make(map[string]interface{})
+			for i := 0; i < len(values)-1; i += 2 {
+				if k, ok := values[i].(string); ok {
+					d[k] = values[i+1]
+				}
+			}
+			return d
+		},
 		"match": func(s, pattern string) bool {
 			for _, p := range strings.Split(pattern, "|") {
 				if strings.EqualFold(s, p) {

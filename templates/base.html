@@ -4,7 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="速创社 - 专业 DevOps & 云原生架构咨询">
+    <meta name="description" content="{{if .MetaDescription}}{{.MetaDescription}}{{else}}{{getSetting "site_description"}}{{end}}">
+    <meta name="keywords" content="{{if .MetaKeywords}}{{.MetaKeywords}}{{else}}{{getSetting "site_keywords"}}{{end}}">
+    <meta property="og:title" content="{{.Title}}">
+    <meta property="og:description" content="{{if .MetaDescription}}{{.MetaDescription}}{{else}}{{getSetting "site_description"}}{{end}}">
+    <meta property="og:type" content="{{if .OGType}}{{.OGType}}{{else}}website{{end}}">
+    {{if .OGImage}}<meta property="og:image" content="{{.OGImage}}">{{end}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{.Title}}">
+    <meta name="twitter:description" content="{{if .MetaDescription}}{{.MetaDescription}}{{else}}{{getSetting "site_description"}}{{end}}">
+    {{if .CanonicalURL}}<link rel="canonical" href="{{.CanonicalURL}}">{{end}}
+    {{if .JSONLD}}<script type="application/ld+json">{{safeJS .JSONLD}}</script>{{end}}
     <title>{{.Title}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -184,7 +194,7 @@
             <div class="flex justify-between items-center h-16">
                 <a href="/" class="brand flex items-center gap-2">
                     <span class="brand-zap text-2xl">⚡</span>
-                    <span class="text-lg font-bold text-gray-900">速创社</span>
+                    <span class="text-lg font-bold text-gray-900">{{$siteName := getSetting "site_name"}}{{if $siteName}}{{$siteName}}{{else}}速创社{{end}}</span>
                 </a>
                 <div class="hidden md:flex items-center gap-1">
                     {{range $item := navItems}}
@@ -225,7 +235,7 @@
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">⚡</span>
-                    <span class="text-base font-bold text-gray-900">速创社</span>
+                    <span class="text-base font-bold text-gray-900">{{getSetting "site_name"}}</span>
                 </div>
                 <button @click="mobileMenu = false" class="p-2 -mr-2 rounded-lg hover:bg-gray-100 text-gray-500" aria-label="关闭">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -246,6 +256,14 @@
     </div>
 
     <main>
+        {{$gt := adsBySlot "global_top"}}
+        {{if $gt}}
+        <div class="bg-amber-50 border-b border-amber-200 pt-16 -mt-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                {{template "ad_slot" (dict "Slot" "global_top")}}
+            </div>
+        </div>
+        {{end}}
         {{template "content" .}}
     </main>
 
@@ -256,10 +274,10 @@
                 <div class="md:col-span-2">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="text-2xl">⚡</span>
-                        <span class="text-lg font-bold text-white">速创社</span>
+                        <span class="text-lg font-bold text-white">{{getSetting "site_name"}}</span>
                     </div>
                     <p class="text-gray-400 leading-relaxed max-w-md text-sm">
-                        专业 DevOps &amp; 云原生架构咨询，帮助企业构建高效、稳定、安全的技术基础设施。
+                        {{$desc := getSetting "site_description"}}{{if $desc}}{{$desc}}{{else}}专业 DevOps &amp; 云原生架构咨询，帮助企业构建高效、稳定、安全的技术基础设施。{{end}}
                     </p>
                 </div>
                 <div>
@@ -274,13 +292,16 @@
                 <div>
                     <h4 class="text-white font-semibold mb-4 text-sm">联系方式</h4>
                     <ul class="space-y-2 text-sm text-gray-400">
-                        <li>📧 <a href="mailto:hello@speedcraft.dev" class="hover:text-white transition-colors">hello@speedcraft.dev</a></li>
-                        <li>💬 微信: SpeedCraft</li>
+                        {{$email := getSetting "contact_email"}}
+                        {{$wechat := getSetting "contact_wechat"}}
+                        {{if $email}}<li>📧 <a href="mailto:{{$email}}" class="hover:text-white transition-colors">{{$email}}</a></li>{{end}}
+                        {{if $wechat}}<li>💬 微信: {{$wechat}}</li>{{end}}
                     </ul>
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-10 pt-6 text-center text-xs text-gray-500">
-                &copy; 2024 速创社 SpeedCraft · All rights reserved
+                {{$siteName := getSetting "site_name"}}
+                &copy; 2024 {{if $siteName}}{{$siteName}}{{else}}速创社{{end}} · All rights reserved
             </div>
         </div>
     </footer>

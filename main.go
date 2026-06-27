@@ -32,6 +32,9 @@ func main() {
 	mux.HandleFunc("/contact", handlers.About(cfg))
 	mux.HandleFunc("/page/{slug}", handlers.PublicPage(cfg))
 	mux.HandleFunc("/page/{slug}/raw", handlers.PublicPageRaw(cfg))
+	mux.HandleFunc("/ad/click/{id}", handlers.AdClick(cfg))
+	mux.HandleFunc("/sitemap.xml", handlers.Sitemap(cfg))
+	mux.HandleFunc("/robots.txt", handlers.RobotsTxt(cfg))
 
 	mux.HandleFunc("/api/message", handlers.SubmitMessage(cfg))
 
@@ -88,6 +91,10 @@ func main() {
 	mux.HandleFunc("/admin/pages", handlers.AdminPages(cfg))
 	mux.HandleFunc("/admin/pages/save", handlers.AdminPageSave(cfg))
 	mux.HandleFunc("/admin/pages/delete", handlers.AdminPageDelete(cfg))
+
+	mux.HandleFunc("/admin/ads", handlers.AdminAds(cfg))
+	mux.HandleFunc("/admin/ads/save", handlers.AdminAdSave(cfg))
+	mux.HandleFunc("/admin/ads/delete", handlers.AdminAdDelete(cfg))
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 

@@ -1,0 +1,23 @@
+{{define "ad_slot"}}
+{{$slot := .Slot}}
+{{$ads := adsBySlot $slot}}
+{{if $ads}}
+<div class="ad-slot ad-slot-{{$slot}} my-6">
+    {{range $ad := $ads}}
+    <div class="ad-item">
+        {{if eq $ad.AdType "html"}}
+            {{safeHTML $ad.HTMLContent}}
+        {{else}}
+            {{if $ad.LinkURL}}
+            <a href="/ad/click/{{$ad.ID}}" target="_blank" rel="noopener sponsored" class="block">
+                <img src="{{$ad.ImageURL}}" alt="{{if $ad.AltText}}{{$ad.AltText}}{{else}}{{$ad.Name}}{{end}}" class="w-full rounded-lg" loading="lazy">
+            </a>
+            {{else}}
+            <img src="{{$ad.ImageURL}}" alt="{{if $ad.AltText}}{{$ad.AltText}}{{else}}{{$ad.Name}}{{end}}" class="w-full rounded-lg" loading="lazy">
+            {{end}}
+        {{end}}
+    </div>
+    {{end}}
+</div>
+{{end}}
+{{end}}

@@ -14,6 +14,7 @@
 
 <section class="py-20 tech-soft">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {{template "ad_slot" (dict "Slot" "blog_top")}}
         {{if eq (len .Data) 0}}
         <div class="reveal text-center py-20">
             <div class="text-6xl mb-6">📝</div>
