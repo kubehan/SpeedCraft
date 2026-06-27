@@ -94,6 +94,13 @@ func InitTemplates() error {
 		"getSetting": func(key string) string {
 			return models.GetSetting(key)
 		},
+		"friendLinks": func() []models.FriendLink {
+			list, err := models.GetPublishedFriendLinks()
+			if err != nil {
+				return []models.FriendLink{}
+			}
+			return list
+		},
 		"adsBySlot": func(slot string) []models.Ad {
 			ads, err := models.GetActiveAdsBySlot(slot)
 			if err != nil {
