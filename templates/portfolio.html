@@ -21,14 +21,31 @@
             <p class="text-gray-500">更多精彩项目，敬请期待</p>
         </div>
         {{else}}
+        {{$defaultCover := getSetting "default_project_cover"}}
         <div class="reveal-stagger grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {{range $proj := .Data}}
             <div class="card overflow-hidden">
-                <div class="h-44 bg-gray-100 flex items-center justify-center">
+                <div class="h-44 overflow-hidden relative">
                     {{if $proj.ImageURL}}
-                    <img src="{{$proj.ImageURL}}" alt="{{$proj.Title}}" class="w-full h-full object-cover">
+                    <img src="{{$proj.ImageURL}}" alt="{{$proj.Title}}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy">
+                    {{else if $defaultCover}}
+                    <img src="{{$defaultCover}}" alt="{{$proj.Title}}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy">
                     {{else}}
-                    <span class="text-5xl opacity-40">📁</span>
+                    <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, white), color-mix(in srgb, var(--color-hero-accent) 18%, white));">
+                        <div class="text-center">
+                            <div class="text-5xl mb-1 opacity-80">
+                                {{if eq $proj.Category "MVP开发"}}🚀
+                                {{else if eq $proj.Category "Kubernetes"}}🐳
+                                {{else if eq $proj.Category "CI/CD"}}🔧
+                                {{else if eq $proj.Category "监控"}}📊
+                                {{else if eq $proj.Category "云架构"}}☁️
+                                {{else if eq $proj.Category "DevOps"}}⚙️
+                                {{else if eq $proj.Category "安全"}}🔒
+                                {{else}}📁{{end}}
+                            </div>
+                            <div class="text-xs font-medium text-gray-600 opacity-70">{{$proj.Category}}</div>
+                        </div>
+                    </div>
                     {{end}}
                 </div>
                 <div class="p-6">

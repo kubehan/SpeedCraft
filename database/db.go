@@ -170,6 +170,21 @@ func migrate() error {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS friendlinks (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			url TEXT NOT NULL,
+			logo_url TEXT DEFAULT '',
+			description TEXT DEFAULT '',
+			category TEXT DEFAULT '',
+			status TEXT DEFAULT 'pending',
+			submitter_email TEXT DEFAULT '',
+			submitter_note TEXT DEFAULT '',
+			sort_order INTEGER DEFAULT 0,
+			is_published INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 	}
 
 	for _, q := range tables {
@@ -196,6 +211,15 @@ func seedDefaults() error {
 		"site_keywords":         "MVP开发,DevOps,云原生,快速原型,技术顾问,创业技术合伙人",
 		"contact_email":         "hello@speedcraft.dev",
 		"contact_wechat":        "SpeedCraft",
+		"wechat_official":       "",
+		"wechat_qr":             "",
+		"icp_beian":             "",
+		"icp_beian_url":         "https://beian.miit.gov.cn/",
+		"police_beian":          "",
+		"police_beian_url":      "",
+		"copyright":             "",
+		"footer_extra_html":     "",
+		"default_project_cover": "",
 		"wechat_webhook":        "",
 		"smtp_host":             "",
 		"smtp_port":             "587",

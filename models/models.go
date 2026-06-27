@@ -964,6 +964,93 @@ func IncrementAdView(id int64) error {
 	return err
 }
 
+// -------- FriendLink --------
+type FriendLink struct {
+	ID             int64     `json:"id"`
+	Name           string    `json:"name"`
+	URL            string    `json:"url"`
+	LogoURL        string    `json:"logo_url"`
+	Description    string    `json:"description"`
+	Category       string    `json:"category"`
+	Status         string    `json:"status"` // pending / approved / rejected
+	SubmitterEmail string    `json:"submitter_email"`
+	SubmitterNote  string    `json:"submitter_note"`
+	SortOrder      int       `json:"sort_order"`
+	IsPublished    int       `json:"is_published"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+func GetAllFriendLinks() ([]FriendLink, error) {
+	rows, err := database.DB.Query("SELECT id, name, url, logo_url, description, category, status, submitter_email, submitter_note, sort_order, is_published, created_at, updated_at FROM friendlinks ORDER BY status='pending' DESC, sort_order ASC, id DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []FriendLink
+	for rows.Next() {
+		var f FriendLink
+		rows.Scan(&f.ID, &f.Name, &f.URL, &f.LogoURL, &f.Description, &f.Category, &f.Status, &f.SubmitterEmail, &f.SubmitterNote, &f.SortOrder, &f.IsPublished, &f.CreatedAt, &f.UpdatedAt)
+		list = append(list, f)
+	}
+	return list, nil
+}
+
+func GetPublishedFriendLinks() ([]FriendLink, error) {
+	rows, err := database.DB.Query("SELECT id, name, url, logo_url, description, category, status, submitter_email, submitter_note, sort_order, is_published, created_at, updated_at FROM friendlinks WHERE is_published=1 AND status='approved' ORDER BY sort_order ASC, id DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []FriendLink
+	for rows.Next() {
+		var f FriendLink
+		rows.Scan(&f.ID, &f.Name, &f.URL, &f.LogoURL, &f.Description, &f.Category, &f.Status, &f.SubmitterEmail, &f.SubmitterNote, &f.SortOrder, &f.IsPublished, &f.CreatedAt, &f.UpdatedAt)
+		list = append(list, f)
+	}
+	return list, nil
+}
+
+func GetFriendLinkByID(id int64) (*FriendLink, error) {
+	var f FriendLink
+	err := database.DB.QueryRow("SELECT id, name, url, logo_url, description, category, status, submitter_email, submitter_note, sort_order, is_published, created_at, updated_at FROM friendlinks WHERE id=?", id).
+		Scan(&f.ID, &f.Name, &f.URL, &f.LogoURL, &f.Description, &f.Category, &f.Status, &f.SubmitterEmail, &f.SubmitterNote, &f.SortOrder, &f.IsPublished, &f.CreatedAt, &f.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &f, nil
+}
+
+func SaveFriendLink(f *FriendLink) (int64, error) {
+	if f.Status == "" {
+		f.Status = "pending"
+	}
+	if f.ID > 0 {
+		_, err := database.DB.Exec(
+			`UPDATE friendlinks SET name=?, url=?, logo_url=?, description=?, category=?, status=?, submitter_email=?, submitter_note=?, sort_order=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+			f.Name, f.URL, f.LogoURL, f.Description, f.Category, f.Status, f.SubmitterEmail, f.SubmitterNote, f.SortOrder, f.IsPublished, f.ID)
+		return f.ID, err
+	}
+	result, err := database.DB.Exec(
+		`INSERT INTO friendlinks (name, url, logo_url, description, category, status, submitter_email, submitter_note, sort_order, is_published) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		f.Name, f.URL, f.LogoURL, f.Description, f.Category, f.Status, f.SubmitterEmail, f.SubmitterNote, f.SortOrder, f.IsPublished)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func DeleteFriendLink(id int64) error {
+	_, err := database.DB.Exec("DELETE FROM friendlinks WHERE id=?", id)
+	return err
+}
+
+func GetPendingFriendLinksCount() int {
+	var n int
+	database.DB.QueryRow("SELECT COUNT(*) FROM friendlinks WHERE status='pending'").Scan(&n)
+	return n
+}
+
 func BatchAction(table, action string, ids []int64) error {
 	if len(ids) == 0 {
 		return nil
