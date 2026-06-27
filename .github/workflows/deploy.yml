@@ -40,6 +40,37 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Compute version info
+        id: ver
+        run: |
+          # Asia/Shanghai timestamps for human-friendly tags
+          DATE=$(TZ=Asia/Shanghai date +'%Y%m%d')
+          DATETIME=$(TZ=Asia/Shanghai date +'%Y%m%d-%H%M%S')
+          YEAR_MONTH=$(TZ=Asia/Shanghai date +'%Y.%m')
+          ISO=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+          # Read version from VERSION file (must exist for stable identification)
+          if [ -f VERSION ]; then
+            VERSION=$(cat VERSION | tr -d '[:space:]')
+          else
+            VERSION="0.0.0"
+          fi
+
+          echo "date=$DATE"                 >> $GITHUB_OUTPUT
+          echo "datetime=$DATETIME"         >> $GITHUB_OUTPUT
+          echo "year_month=$YEAR_MONTH"     >> $GITHUB_OUTPUT
+          echo "iso=$ISO"                   >> $GITHUB_OUTPUT
+          echo "version=$VERSION"           >> $GITHUB_OUTPUT
+          echo "version_dt=v${VERSION}-${DATETIME}" >> $GITHUB_OUTPUT
+          echo "version_d=v${VERSION}-${DATE}"      >> $GITHUB_OUTPUT
+          echo ""
+          echo "==== Build identification ===="
+          echo "Version       : v${VERSION}"
+          echo "Date          : ${DATE}"
+          echo "Datetime      : ${DATETIME}"
+          echo "Version+DT    : v${VERSION}-${DATETIME}"
+          echo "============================="
+
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
@@ -47,11 +78,25 @@ jobs:
           images: kubehan/speedcraft
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha,prefix=sha-,format=short
+            type=raw,value=v${{ steps.ver.outputs.version }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.ver.outputs.version_dt }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.ver.outputs.version_d }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.ver.outputs.date }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.ver.outputs.datetime }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.ver.outputs.year_month }},enable=${{ github.ref == 'refs/heads/main' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          labels: |
+            org.opencontainers.image.title=SpeedCraft
+            org.opencontainers.image.description=个人品牌门户 · MVP开发 · DevOps咨询
+            org.opencontainers.image.url=https://github.com/kubehan/SpeedCraft
+            org.opencontainers.image.source=https://github.com/kubehan/SpeedCraft
+            org.opencontainers.image.version=${{ steps.ver.outputs.version }}
+            org.opencontainers.image.created=${{ steps.ver.outputs.iso }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.authors=kubehan
 
       - name: Build and push multi-arch image
         uses: docker/build-push-action@v5
@@ -62,6 +107,36 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.ver.outputs.version }}
+            BUILD_DATE=${{ steps.ver.outputs.iso }}
+            GIT_COMMIT=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
+
+      - name: Summary
+        run: |
+          echo "## 🚀 镜像推送完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**版本**: v${{ steps.ver.outputs.version }}    **时间**: ${{ steps.ver.outputs.datetime }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tags 列表" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 推荐拉取（按精确度）" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "# 永远最新" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull kubehan/speedcraft:latest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# 按版本（推荐生产环境）" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull kubehan/speedcraft:v${{ steps.ver.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# 版本 + 时间（唯一可追溯，推荐回滚使用）" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull kubehan/speedcraft:${{ steps.ver.outputs.version_dt }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# 按日期" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull kubehan/speedcraft:${{ steps.ver.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

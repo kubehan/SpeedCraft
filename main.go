@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"speedcraft/config"
@@ -8,7 +9,15 @@ import (
 	"speedcraft/handlers"
 )
 
+// Build-time variables injected via -ldflags
+var (
+	Version   = "dev"
+	BuildDate = "unknown"
+	GitCommit = "unknown"
+)
+
 func main() {
+	log.Printf("[INFO] SpeedCraft version=%s commit=%s built=%s", Version, GitCommit, BuildDate)
 	cfg := config.Load()
 
 	if err := database.Init(cfg.DBPath); err != nil {
@@ -35,6 +44,16 @@ func main() {
 	mux.HandleFunc("/ad/click/{id}", handlers.AdClick(cfg))
 	mux.HandleFunc("/sitemap.xml", handlers.Sitemap(cfg))
 	mux.HandleFunc("/robots.txt", handlers.RobotsTxt(cfg))
+
+	// Version endpoint for health checks / debugging
+	mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(map[string]string{
+			"version":    Version,
+			"build_date": BuildDate,
+			"commit":     GitCommit,
+		})
+	})
 
 	mux.HandleFunc("/api/message", handlers.SubmitMessage(cfg))
 
