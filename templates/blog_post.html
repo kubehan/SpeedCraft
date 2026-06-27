@@ -1,0 +1,26 @@
+{{template "layout" .}}
+{{define "content"}}
+{{$post := .Data.post}}
+{{$content := .Data.content}}
+<section class="bg-gray-900 pt-32 pb-20">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <a href="/blog" class="text-gray-400 hover:text-white mb-8 inline-flex items-center">← 返回博客</a>
+        <h1 class="text-3xl md:text-4xl font-bold text-white mt-8 mb-4">{{$post.Title}}</h1>
+        <div class="flex items-center space-x-4 text-sm text-gray-400">
+            <span>{{formatDate $post.CreatedAt}}</span>
+            <span>·</span>
+            <span>{{$post.Tags}}</span>
+            <span>·</span>
+            <span>{{$post.Views}} 次阅读</span>
+        </div>
+    </div>
+</section>
+
+<section class="py-12 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <article class="bg-white rounded-2xl p-8 md:p-12 border border-gray-100 prose-lg max-w-none">
+            {{safeHTML $content}}
+        </article>
+    </div>
+</section>
+{{end}}

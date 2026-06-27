@@ -1,0 +1,167 @@
+{{template "layout" .}}
+{{define "content"}}
+{{$s := .Data}}
+<!-- About Hero -->
+<section class="bg-gray-900 pt-32 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-bold text-white mb-6">关于我</h1>
+                <div class="text-lg text-gray-300 leading-relaxed mb-6">
+                    {{safeHTML (index $s "about_me")}}
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3 text-gray-300">
+                        <span class="text-xl">📍</span>
+                        <span>中国 · 远程工作</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-gray-300">
+                        <span class="text-xl">📧</span>
+                        <span>{{index $s "contact_email"}}</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-gray-300">
+                        <span class="text-xl">💬</span>
+                        <span>微信: {{index $s "contact_wechat"}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <div class="glass rounded-2xl p-8 text-center">
+                    <div class="text-8xl mb-4">👨‍💻</div>
+                    <div class="text-white text-xl font-semibold">资深全栈运维架构师</div>
+                    <div class="text-gray-400 mt-2">MVP 开发 / DevOps / Cloud / SRE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Me -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">为什么选择我？</h2>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="text-center p-8">
+                <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">⚡</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">快速落地</h3>
+                <p class="text-gray-500">最短 2 周交付 MVP，让想法快速验证。不画饼，只出能跑的代码。</p>
+            </div>
+            <div class="text-center p-8">
+                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">🏆</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">9年全栈经验</h3>
+                <p class="text-gray-500">从 MVP 开发到云原生架构，从代码到运维，全链路覆盖，一个人就是一支团队。</p>
+            </div>
+            <div class="text-center p-8">
+                <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">🔒</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">可靠交付</h3>
+                <p class="text-gray-500">签订正规合同，分阶段交付，源码归你。24小时内响应，紧急问题优先处理。</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Form -->
+<section id="contact-form" class="py-20 bg-gray-50">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">免费咨询</h2>
+            <p class="text-lg text-gray-500">
+                填写表单，我会在 24 小时内与您联系
+            </p>
+        </div>
+        <div class="bg-white rounded-2xl p-8 md:p-12 shadow-sm border border-gray-100">
+            <form class="space-y-6" x-data="contactForm()" @submit.prevent="submit()">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">姓名 *</label>
+                        <input type="text" x-model="form.name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="您的姓名">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">邮箱 *</label>
+                        <input type="email" x-model="form.email" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="your@email.com">
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">电话</label>
+                        <input type="tel" x-model="form.phone" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="您的电话">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">公司</label>
+                        <input type="text" x-model="form.company" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" placeholder="公司名称">
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">服务类型</label>
+                        <select x-model="form.service_type" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                            <option value="">请选择</option>
+                            <option value="mvp">MVP 极速开发</option>
+                            <option value="cloud">云架构设计</option>
+                            <option value="cicd">CI/CD 流水线</option>
+                            <option value="k8s">Kubernetes 运维</option>
+                            <option value="monitoring">监控体系建设</option>
+                            <option value="iac">基础设施即代码</option>
+                            <option value="code">代码开发</option>
+                            <option value="design">系统设计</option>
+                            <option value="solution">方案设计</option>
+                            <option value="security">安全等保 & 基线核查</option>
+                            <option value="xc">信创适配</option>
+                            <option value="cloud-migration">服务上云 & 托管维护</option>
+                            <option value="consulting">DevOps 咨询与培训</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">预算范围</label>
+                        <select x-model="form.budget" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white">
+                            <option value="">请选择</option>
+                            <option value="lt5k">¥5,000 以下</option>
+                            <option value="5k-20k">¥5,000 - ¥20,000</option>
+                            <option value="20k-50k">¥20,000 - ¥50,000</option>
+                            <option value="50k-100k">¥50,000 - ¥100,000</option>
+                            <option value="gt100k">¥100,000 以上</option>
+                            <option value="unknown">暂不确定</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">需求描述 *</label>
+                    <textarea x-model="form.message" required rows="5" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none resize-none" placeholder="请详细描述您的需求，包括技术栈、时间要求等"></textarea>
+                </div>
+                <button type="submit" :disabled="submitting" class="w-full py-4 text-white font-semibold gradient-bg rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all duration-300 disabled:opacity-50" x-text="submitting ? '提交中...' : '提交咨询 →'"></button>
+                <div x-show="success" x-cloak class="p-4 bg-green-50 text-green-700 rounded-xl text-center">✓ 提交成功！我会在24小时内与您联系。</div>
+                <div x-show="error" x-cloak class="p-4 bg-red-50 text-red-700 rounded-xl text-center" x-text="error"></div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+    function contactForm() {
+        return {
+            form: { name: '', email: '', phone: '', company: '', service_type: '', budget: '', message: '' },
+            submitting: false, success: false, error: '',
+            async submit() {
+                this.submitting = true; this.success = false; this.error = '';
+                try {
+                    const params = new URLSearchParams(this.form);
+                    const res = await fetch('/api/message', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params });
+                    const data = await res.json();
+                    if (data.success) { this.success = true; this.form = { name: '', email: '', phone: '', company: '', service_type: '', budget: '', message: '' }; }
+                    else { this.error = data.error || '提交失败'; }
+                } catch(e) { this.error = '网络错误，请稍后重试'; }
+                this.submitting = false;
+            }
+        }
+    }
+</script>
+{{end}}

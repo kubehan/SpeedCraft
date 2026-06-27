@@ -1,0 +1,35 @@
+{{template "admin_layout" .}}
+{{define "admin_content"}}
+{{$p := .Data}}
+<div class="max-w-3xl">
+    <div class="mb-6">
+        <a href="/admin/projects" class="text-sm text-indigo-600 hover:text-indigo-800">← 返回项目列表</a>
+        <h1 class="text-xl font-bold text-slate-900 mt-1">{{if gt $p.ID 0}}编辑项目{{else}}新增项目{{end}}</h1>
+    </div>
+    <form method="POST" action="/admin/projects/save" class="page-card">
+        <div class="page-card-body space-y-5">
+            {{if gt $p.ID 0}}<input type="hidden" name="id" value="{{$p.ID}}">{{end}}
+            <div class="grid md:grid-cols-2 gap-5">
+                <div><label class="form-label">项目名称 *</label><input type="text" name="title" value="{{$p.Title}}" required class="form-input"></div>
+                <div><label class="form-label">链接别名</label><input type="text" name="slug" value="{{$p.Slug}}" class="form-input"></div>
+            </div>
+            <div><label class="form-label">摘要</label><textarea name="summary" rows="3" class="form-input">{{$p.Summary}}</textarea></div>
+            <div><label class="form-label">内容 (HTML)</label><textarea name="content" rows="15" class="form-input font-mono text-sm">{{$p.Content}}</textarea></div>
+            <div class="grid md:grid-cols-2 gap-5">
+                <div><label class="form-label">分类</label><input type="text" name="category" value="{{$p.Category}}" class="form-input" placeholder="Kubernetes"></div>
+                <div><label class="form-label">技术栈 (逗号分隔)</label><input type="text" name="tech_stack" value="{{$p.TechStack}}" class="form-input" placeholder="Docker,Kubernetes,Terraform"></div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-5">
+                <div><label class="form-label">客户名称</label><input type="text" name="client_name" value="{{$p.ClientName}}" class="form-input"></div>
+                <div><label class="form-label">客户链接</label><input type="text" name="client_url" value="{{$p.ClientURL}}" class="form-input"></div>
+                <div><label class="form-label">图片链接</label><input type="text" name="image_url" value="{{$p.ImageURL}}" class="form-input"></div>
+            </div>
+            <div><label class="form-label">发布状态</label><select name="is_published" class="form-input bg-white w-auto"><option value="0" {{if eq $p.IsPublished 0}}selected{{end}}>未发布</option><option value="1" {{if eq $p.IsPublished 1}}selected{{end}}>已发布</option></select></div>
+            <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
+                <button type="submit" class="btn-primary">保存</button>
+                <a href="/admin/projects" class="btn-secondary">取消</a>
+            </div>
+        </div>
+    </form>
+</div>
+{{end}}

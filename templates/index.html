@@ -1,0 +1,146 @@
+{{template "layout" .}}
+{{define "content"}}
+{{$data := .Data}}
+{{$s := $data.Settings}}
+
+<!-- Hero Section -->
+<section class="hero-gradient min-h-screen flex items-center relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full filter blur-3xl"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500 rounded-full filter blur-3xl"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 relative z-10">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="fade-in">
+                <div class="inline-block px-4 py-2 rounded-full bg-indigo-500/10 text-indigo-300 text-sm font-medium mb-6">
+                    {{index $s "hero_badge"}}
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+                    {{index $s "hero_title"}}<br>
+                    <span class="gradient-text">快速 · 落地 · 交付</span>
+                </h1>
+                <p class="text-lg text-gray-300 leading-relaxed mb-8">
+                    {{index $s "hero_subtitle"}}
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="/services" class="px-8 py-3.5 text-white gradient-bg rounded-full font-medium hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300">
+                        查看服务 →
+                    </a>
+                    <a href="/about#contact-form" class="px-8 py-3.5 text-gray-300 border border-gray-600 rounded-full font-medium hover:border-indigo-500 hover:text-white transition-all duration-300">
+                        免费咨询
+                    </a>
+                </div>
+            </div>
+            <div class="hidden md:block fade-in float-anim">
+                <div class="relative">
+                    <div class="w-96 h-96 mx-auto relative">
+                        <div class="absolute inset-0 gradient-bg rounded-full opacity-20 blur-3xl"></div>
+                        <div class="absolute inset-8 glass rounded-2xl flex items-center justify-center">
+                            <div class="text-center p-8">
+                                <div class="text-7xl mb-4">⚡</div>
+                                <div class="text-white text-2xl font-bold">速创社</div>
+                                <div class="text-gray-400 text-sm mt-2">把创意快速变成产品</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-bg border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+                <div class="text-3xl md:text-4xl font-bold text-white mb-2">{{index $s "stats_years"}}</div>
+                <div class="text-gray-400 text-sm">{{index $s "stats_years_label"}}</div>
+            </div>
+            <div>
+                <div class="text-3xl md:text-4xl font-bold text-white mb-2">{{index $s "stats_projects"}}</div>
+                <div class="text-gray-400 text-sm">{{index $s "stats_projects_label"}}</div>
+            </div>
+            <div>
+                <div class="text-3xl md:text-4xl font-bold text-white mb-2">{{index $s "stats_uptime"}}</div>
+                <div class="text-gray-400 text-sm">{{index $s "stats_uptime_label"}}</div>
+            </div>
+            <div>
+                <div class="text-3xl md:text-4xl font-bold text-white mb-2">{{index $s "stats_response"}}</div>
+                <div class="text-gray-400 text-sm">{{index $s "stats_response_label"}}</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Philosophy -->
+<section class="py-16 bg-white border-b border-gray-100">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="text-5xl mb-6">⚡</div>
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">{{index $s "philosophy_title"}}</h2>
+        <p class="text-lg text-gray-500 leading-relaxed">{{index $s "philosophy_desc"}}</p>
+    </div>
+</section>
+
+<!-- Skills Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">技术栈</h2>
+            <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+                精通主流 DevOps 技术栈，覆盖云原生全链路
+            </p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {{range $skill := $data.Skills}}
+            <div class="p-6 rounded-xl bg-gray-50 hover:bg-indigo-50 border border-gray-100 hover:border-indigo-200 card-hover text-center group">
+                <div class="text-3xl mb-3">{{$skill.Icon}}</div>
+                <h3 class="font-semibold text-gray-900 group-hover:text-indigo-600">{{$skill.Name}}</h3>
+                <p class="text-sm text-gray-400 mt-1">{{$skill.Level}}</p>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</section>
+
+<!-- Services Preview -->
+<section class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">核心服务</h2>
+            <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+                从 MVP 极速开发到云原生架构，一站式技术服务
+            </p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            {{range $i, $svc := $data.Services}}{{if lt $i 6}}
+            <div class="p-8 bg-white rounded-2xl border border-gray-100 card-hover group">
+                <div class="text-4xl mb-4">{{$svc.Icon}}</div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-3 group-hover:text-indigo-600">{{$svc.Title}}</h3>
+                <p class="text-gray-500 leading-relaxed">{{$svc.Description}}</p>
+            </div>
+            {{end}}{{end}}
+        </div>
+        <div class="text-center mt-12">
+            <a href="/services" class="inline-flex items-center text-indigo-600 font-medium hover:text-indigo-700">
+                查看全部服务 →
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 gradient-bg">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+            有想法？让我帮你快速落地
+        </h2>
+        <p class="text-lg text-indigo-100 mb-8">
+            免费咨询，为你量身定制 MVP 方案
+        </p>
+        <a href="/about#contact-form" class="inline-block px-10 py-4 bg-white text-indigo-600 rounded-full font-semibold hover:shadow-xl transition-all duration-300">
+            立即开始 →
+        </a>
+    </div>
+</section>
+{{end}}

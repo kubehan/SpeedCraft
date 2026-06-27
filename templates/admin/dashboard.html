@@ -1,0 +1,80 @@
+{{template "admin_layout" .}}
+{{define "admin_content"}}
+{{$d := .Data}}
+<div>
+    <div class="mb-6">
+        <h1 class="text-xl font-bold text-slate-900">仪表盘</h1>
+        <p class="text-sm text-slate-500 mt-0.5">站点内容总览</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-lg">💬</div>
+                <span class="text-xs text-slate-400">全部</span>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">{{$d.totalMessages}}</div>
+            <div class="text-sm text-slate-500 mt-0.5">{{$d.pendingMessages}} 条待处理</div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">🔧</div>
+                <span class="text-xs text-slate-400">{{add $d.pubServices $d.privServices}} 项</span>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">{{$d.pubServices}}</div>
+            <div class="text-sm text-slate-500 mt-0.5"><span class="text-slate-400">{{$d.privServices}} 项未发布</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg">📝</div>
+                <span class="text-xs text-slate-400">{{add $d.pubPosts $d.privPosts}} 篇</span>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">{{$d.pubPosts}}</div>
+            <div class="text-sm text-slate-500 mt-0.5"><span class="text-slate-400">{{$d.privPosts}} 篇草稿</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-lg">⭐</div>
+                <span class="text-xs text-slate-400">{{add $d.pubOS $d.privOS}} 个</span>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">{{$d.pubOS}}</div>
+            <div class="text-sm text-slate-500 mt-0.5"><span class="text-slate-400">{{$d.privOS}} 个未发布</span></div>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+        <a href="/admin/services" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl flex-shrink-0">🔧</div>
+            <div><div class="font-medium text-slate-900">服务管理</div><div class="text-sm text-slate-500">配置和管理展示服务</div></div>
+        </a>
+        <a href="/admin/posts" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl flex-shrink-0">📝</div>
+            <div><div class="font-medium text-slate-900">文章管理</div><div class="text-sm text-slate-500">创建和编辑博客文章</div></div>
+        </a>
+        <a href="/admin/projects" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xl flex-shrink-0">📁</div>
+            <div><div class="font-medium text-slate-900">项目管理</div><div class="text-sm text-slate-500">管理案例项目</div></div>
+        </a>
+        <a href="/admin/opensource" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xl flex-shrink-0">⭐</div>
+            <div><div class="font-medium text-slate-900">开源项目</div><div class="text-sm text-slate-500">管理开源项目展示</div></div>
+        </a>
+        <a href="/admin/navigation" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xl flex-shrink-0">🗺️</div>
+            <div><div class="font-medium text-slate-900">导航管理</div><div class="text-sm text-slate-500">配置网站导航栏</div></div>
+        </a>
+        <a href="/admin/skills" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xl flex-shrink-0">🎯</div>
+            <div><div class="font-medium text-slate-900">技能管理</div><div class="text-sm text-slate-500">管理技术栈展示</div></div>
+        </a>
+        <a href="/admin/settings" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xl flex-shrink-0">⚙️</div>
+            <div><div class="font-medium text-slate-900">站点设置</div><div class="text-sm text-slate-500">配置站点信息和展示文案</div></div>
+        </a>
+        <a href="/admin/messages" class="stat-card flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div class="w-10 h-10 rounded-lg bg-cyan-100 text-cyan-600 flex items-center justify-center text-xl flex-shrink-0">💬</div>
+            <div><div class="font-medium text-slate-900">留言管理</div><div class="text-sm text-slate-500">查看和处理客户咨询</div></div>
+        </a>
+    </div>
+</div>
+{{end}}

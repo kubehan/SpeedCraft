@@ -1,0 +1,47 @@
+{{template "admin_layout" .}}
+{{define "admin_content"}}
+<div>
+    <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-xl font-bold text-slate-900">技能管理</h1><p class="text-sm text-slate-500 mt-0.5">管理首页技术栈展示</p></div>
+    </div>
+    <div class="page-card">
+        <div class="page-card-header bg-slate-50/50">
+            <span class="text-sm font-medium text-slate-700">添加技能</span>
+        </div>
+        <div class="page-card-body">
+            <form method="POST" action="/admin/skills/save" class="flex flex-wrap items-end gap-3">
+                <div><label class="form-label">图标</label><input type="text" name="icon" class="form-input w-16" placeholder="☁️"></div>
+                <div class="flex-1 min-w-[150px]"><label class="form-label">名称</label><input type="text" name="name" required class="form-input" placeholder="AWS / Azure"></div>
+                <div><label class="form-label">级别</label><select name="level" class="form-input bg-white"><option>Expert</option><option>Advanced</option><option>Intermediate</option></select></div>
+                <div><label class="form-label">分类</label><input type="text" name="category" class="form-input w-24" placeholder="Cloud"></div>
+                <div><label class="form-label">排序</label><input type="number" name="sort_order" value="0" class="form-input w-16"></div>
+                <button type="submit" class="btn-primary">添加</button>
+            </form>
+        </div>
+        <table class="data-table">
+            <thead><tr>
+                <th class="w-16">排序</th>
+                <th class="w-16">图标</th>
+                <th>名称</th>
+                <th class="w-24">级别</th>
+                <th class="w-24">分类</th>
+                <th class="w-20">状态</th>
+                <th class="w-20">操作</th>
+            </tr></thead>
+            <tbody>
+                {{range $s := .Data}}
+                <tr>
+                    <td class="text-slate-400">{{$s.SortOrder}}</td>
+                    <td class="text-lg">{{$s.Icon}}</td>
+                    <td class="font-medium text-slate-900">{{$s.Name}}</td>
+                    <td><span class="badge {{if eq $s.Level "Expert"}}badge-green{{else}}badge-blue{{end}}">{{$s.Level}}</span></td>
+                    <td class="text-slate-500">{{$s.Category}}</td>
+                    <td>{{if eq $s.Published 1}}<span class="text-green-600 text-sm">显示</span>{{else}}<span class="text-slate-400 text-sm">隐藏</span>{{end}}</td>
+                    <td><a href="/admin/skills/delete?id={{$s.ID}}" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('确定删除？')">删除</a></td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

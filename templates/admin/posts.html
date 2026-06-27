@@ -1,0 +1,40 @@
+{{template "admin_layout" .}}
+{{define "admin_content"}}
+<div>
+    <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-xl font-bold text-slate-900">文章管理</h1><p class="text-sm text-slate-500 mt-0.5">管理博客文章（支持 Markdown / HTML）</p></div>
+        <a href="/admin/posts/edit" class="btn-primary">＋ 写文章</a>
+    </div>
+    <div class="page-card">
+        <table class="data-table">
+            <thead><tr>
+                <th>标题</th>
+                <th class="w-20">类型</th>
+                <th class="w-16">阅读</th>
+                <th>标签</th>
+                <th class="w-20">状态</th>
+                <th class="w-24">时间</th>
+                <th class="w-28">操作</th>
+            </tr></thead>
+            <tbody>
+                {{range $p := .Data}}
+                <tr>
+                    <td class="font-medium text-slate-900">{{$p.Title}}</td>
+                    <td><span class="badge {{if eq $p.ContentType "markdown"}}badge-blue{{else}}badge-purple{{end}}">{{$p.ContentType}}</span></td>
+                    <td class="text-slate-400 text-xs">{{$p.Views}}</td>
+                    <td class="text-slate-500 max-w-40 truncate" title="{{$p.Tags}}">{{$p.Tags}}</td>
+                    <td>{{if eq $p.IsPublished 1}}<span class="badge badge-green">已发布</span>{{else}}<span class="badge badge-yellow">草稿</span>{{end}}</td>
+                    <td class="text-slate-400 text-xs whitespace-nowrap">{{formatDate $p.CreatedAt}}</td>
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <a href="/admin/posts/edit?id={{$p.ID}}" class="text-indigo-600 hover:text-indigo-800 text-sm">编辑</a>
+                            <a href="/admin/posts/delete?id={{$p.ID}}" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('确定删除？')">删除</a>
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

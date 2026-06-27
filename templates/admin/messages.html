@@ -1,0 +1,80 @@
+{{template "admin_layout" .}}
+{{define "admin_content"}}
+{{$d := .Data}}
+<div>
+    <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-xl font-bold text-slate-900">留言管理</h1><p class="text-sm text-slate-500 mt-0.5">共 {{$d.TotalCount}} 条留言</p></div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-4">
+        <a href="/admin/messages" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status ""}}bg-indigo-600 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">全部</a>
+        <a href="/admin/messages?status=pending" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "pending"}}bg-amber-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">待处理</a>
+        <a href="/admin/messages?status=contacted" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "contacted"}}bg-blue-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">已联系</a>
+        <a href="/admin/messages?status=closed" class="px-3.5 py-1.5 text-sm rounded-lg {{if eq $d.Status "closed"}}bg-slate-500 text-white{{else}}bg-white text-slate-600 border border-slate-200 hover:border-slate-300{{end}}">已关闭</a>
+    </div>
+
+    <div class="page-card">
+        <div class="overflow-x-auto">
+            <table class="data-table">
+                <thead><tr>
+                    <th class="w-20">状态</th>
+                    <th class="w-24">姓名</th>
+                    <th>联系方式</th>
+                    <th class="w-28">服务类型</th>
+                    <th class="w-20">预算</th>
+                    <th>留言</th>
+                    <th class="w-28">时间</th>
+                    <th class="w-24">操作</th>
+                </tr></thead>
+                <tbody>
+                    {{range $msg := $d.Messages}}
+                    <tr>
+                        <td>
+                            {{if eq $msg.Status "pending"}}<span class="badge badge-yellow">待处理</span>
+                            {{else if eq $msg.Status "contacted"}}<span class="badge badge-blue">已联系</span>
+                            {{else}}<span class="badge badge-gray">已关闭</span>{{end}}
+                        </td>
+                        <td class="font-medium text-slate-900">{{$msg.Name}}</td>
+                        <td>
+                            <div class="text-slate-900 text-sm">{{$msg.Email}}</div>
+                            {{if $msg.Phone}}<div class="text-slate-400 text-xs">{{$msg.Phone}}</div>{{end}}
+                        </td>
+                        <td class="text-slate-600 text-sm">{{$msg.ServiceType}}</td>
+                        <td class="text-slate-600 text-sm">{{$msg.Budget}}</td>
+                        <td class="text-slate-600 text-sm max-w-48">
+                            <span title="{{$msg.Message}}">{{slice $msg.Message 50}}</span>
+                        </td>
+                        <td class="text-slate-400 text-xs whitespace-nowrap">{{formatDateTime $msg.CreatedAt}}</td>
+                        <td>
+                            <div class="flex flex-col gap-1" x-data="{ open: false }">
+                                <button @click="open = !open" class="text-xs text-indigo-600 hover:text-indigo-700 text-left">操作 ↕</button>
+                                <div x-show="open" @click.outside="open = false" class="flex flex-col gap-1">
+                                    {{if ne $msg.Status "contacted"}}
+                                    <form action="/admin/messages/update" method="POST"><input type="hidden" name="id" value="{{$msg.ID}}"><input type="hidden" name="status" value="contacted"><button type="submit" class="text-xs text-blue-600 hover:text-blue-700 text-left">标记已联系</button></form>
+                                    {{end}}
+                                    {{if ne $msg.Status "closed"}}
+                                    <form action="/admin/messages/update" method="POST"><input type="hidden" name="id" value="{{$msg.ID}}"><input type="hidden" name="status" value="closed"><button type="submit" class="text-xs text-slate-600 hover:text-slate-700 text-left">标记已关闭</button></form>
+                                    {{end}}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{if gt $d.TotalPages 1}}
+    <div class="flex justify-center items-center gap-2 mt-6">
+        {{if gt $d.Page 1}}
+        <a href="?page={{sub $d.Page 1}}{{if $d.Status}}&status={{$d.Status}}{{end}}" class="btn-secondary text-sm">上一页</a>
+        {{end}}
+        <span class="text-sm text-slate-500">第 {{$d.Page}} / {{$d.TotalPages}} 页</span>
+        {{if lt $d.Page $d.TotalPages}}
+        <a href="?page={{add $d.Page 1}}{{if $d.Status}}&status={{$d.Status}}{{end}}" class="btn-secondary text-sm">下一页</a>
+        {{end}}
+    </div>
+    {{end}}
+</div>
+{{end}}

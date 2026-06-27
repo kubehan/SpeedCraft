@@ -1,0 +1,38 @@
+{{template "admin_layout" .}}
+{{define "admin_content"}}
+<div>
+    <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-xl font-bold text-slate-900">项目管理</h1><p class="text-sm text-slate-500 mt-0.5">管理案例展示项目</p></div>
+        <a href="/admin/projects/edit" class="btn-primary">＋ 新增项目</a>
+    </div>
+    <div class="page-card">
+        <table class="data-table">
+            <thead><tr>
+                <th>标题</th>
+                <th class="w-24">分类</th>
+                <th class="w-32">客户</th>
+                <th class="w-20">状态</th>
+                <th class="w-24">时间</th>
+                <th class="w-28">操作</th>
+            </tr></thead>
+            <tbody>
+                {{range $p := .Data}}
+                <tr>
+                    <td class="font-medium text-slate-900">{{$p.Title}}</td>
+                    <td><span class="badge badge-blue">{{$p.Category}}</span></td>
+                    <td class="text-slate-500">{{if $p.ClientName}}{{$p.ClientName}}{{else}}-{{end}}</td>
+                    <td>{{if eq $p.IsPublished 1}}<span class="badge badge-green">已发布</span>{{else}}<span class="badge badge-gray">未发布</span>{{end}}</td>
+                    <td class="text-slate-400 text-xs whitespace-nowrap">{{formatDate $p.CreatedAt}}</td>
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <a href="/admin/projects/edit?id={{$p.ID}}" class="text-indigo-600 hover:text-indigo-800 text-sm">编辑</a>
+                            <a href="/admin/projects/delete?id={{$p.ID}}" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('确定删除？')">删除</a>
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,45 @@
+{{template "admin_layout" .}}
+{{define "admin_content"}}
+<div>
+    <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-xl font-bold text-slate-900">导航管理</h1><p class="text-sm text-slate-500 mt-0.5">配置网站顶部导航菜单</p></div>
+    </div>
+    <div class="page-card">
+        <div class="page-card-header bg-slate-50/50">
+            <span class="text-sm font-medium text-slate-700">添加导航项</span>
+        </div>
+        <div class="page-card-body">
+            <form method="POST" action="/admin/navigation/save" class="flex flex-wrap items-end gap-3">
+                <div><label class="form-label">图标</label><input type="text" name="icon" class="form-input w-16" placeholder="🏠"></div>
+                <div class="flex-1 min-w-[120px]"><label class="form-label">名称</label><input type="text" name="label" required class="form-input" placeholder="菜单名"></div>
+                <div class="flex-1 min-w-[160px]"><label class="form-label">链接</label><input type="text" name="url" required class="form-input" placeholder="/page"></div>
+                <div><label class="form-label">排序</label><input type="number" name="sort_order" value="0" class="form-input w-16"></div>
+                <div><label class="form-label">发布</label><select name="is_published" class="form-input bg-white"><option value="1">是</option><option value="0">否</option></select></div>
+                <button type="submit" class="btn-primary">添加</button>
+            </form>
+        </div>
+        <table class="data-table">
+            <thead><tr>
+                <th class="w-16">排序</th>
+                <th class="w-16">图标</th>
+                <th>名称</th>
+                <th>链接</th>
+                <th class="w-20">状态</th>
+                <th class="w-20">操作</th>
+            </tr></thead>
+            <tbody>
+                {{range $n := .Data}}
+                <tr>
+                    <td class="text-slate-400">{{$n.SortOrder}}</td>
+                    <td class="text-lg">{{$n.Icon}}</td>
+                    <td class="font-medium text-slate-900">{{$n.Label}}</td>
+                    <td class="text-slate-500 font-mono text-xs">{{$n.URL}}</td>
+                    <td>{{if eq $n.Published 1}}<span class="badge badge-green">显示</span>{{else}}<span class="badge badge-gray">隐藏</span>{{end}}</td>
+                    <td><a href="/admin/navigation/delete?id={{$n.ID}}" class="text-red-500 hover:text-red-700 text-sm" onclick="return confirm('确定删除？')">删除</a></td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

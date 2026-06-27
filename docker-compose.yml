@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  speedcraft:
+    build: .
+    container_name: speedcraft
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DB_PATH=/app/data/speedcraft.db
+      - SITE_URL=http://localhost:8080
+      - ADMIN_PWD=${ADMIN_PWD:-admin888}
+    volumes:
+      - speedcraft_data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  speedcraft_data:
