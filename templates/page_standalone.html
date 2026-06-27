@@ -1,8 +1,41 @@
 {{template "layout" .}}
 {{define "content"}}
 {{$d := .Data}}
-{{if $d.css}}{{safeHTML $d.css}}{{end}}
+{{$p := $d.page}}
 <div class="pt-16">
-    {{safeHTML $d.body}}
+    <iframe
+        id="standalone-frame"
+        src="/page/{{$p.Slug}}/raw"
+        title="{{$p.Title}}"
+        style="display: block; width: 100%; border: 0; min-height: calc(100vh - 4rem);"
+        loading="lazy"></iframe>
 </div>
+<script>
+(function() {
+    var iframe = document.getElementById('standalone-frame');
+    if (!iframe) return;
+    function resize() {
+        try {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            if (!doc || !doc.body) return;
+            var h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+            if (h > 0) iframe.style.height = h + 'px';
+        } catch(e) {}
+    }
+    iframe.addEventListener('load', function() {
+        resize();
+        try {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            if (doc) {
+                var ro = new ResizeObserver(resize);
+                ro.observe(doc.body);
+                // Also resize on window/iframe resize and after fonts/images load
+                window.addEventListener('resize', resize);
+                setTimeout(resize, 500);
+                setTimeout(resize, 1500);
+            }
+        } catch(e) {}
+    });
+})();
+</script>
 {{end}}

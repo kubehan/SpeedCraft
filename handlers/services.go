@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 	"speedcraft/config"
 	"speedcraft/models"
 )
@@ -50,13 +49,12 @@ func PublicPage(cfg *config.Config) http.HandlerFunc {
 			return
 		}
 
-		// Standalone: keep site nav/footer, render raw HTML content (extract from full doc if needed)
+		// Standalone: keep site nav/footer, embed raw HTML in iframe for full style isolation
 		if page.RenderMode == "standalone" {
-			body, css := extractHTMLBody(page.Content)
 			render(w, r, "page_standalone.html", PageData{
 				Title:   page.Title + " · " + models.GetSetting("site_name"),
 				Site:    cfg,
-				Data:    map[string]interface{}{"page": page, "body": body, "css": css},
+				Data:    map[string]interface{}{"page": page},
 				Current: slug,
 			})
 			return
@@ -76,55 +74,20 @@ func PublicPage(cfg *config.Config) http.HandlerFunc {
 	}
 }
 
-// extractHTMLBody extracts <body> content and <style>/<link>/<script> blocks from a full HTML doc.
-// If input is just a fragment, returns it unchanged.
-func extractHTMLBody(html string) (body, css string) {
-	lower := strings.ToLower(html)
-	// If not a full document, return as-is
-	if !strings.Contains(lower, "<html") && !strings.Contains(lower, "<body") {
-		return html, ""
-	}
-
-	// Extract <style>...</style> blocks (so they survive inside main body)
-	var styles strings.Builder
-	for {
-		start := strings.Index(lower, "<style")
-		if start < 0 {
-			break
+// PublicPageRaw serves the raw HTML content for iframe srcdoc.
+func PublicPageRaw(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		slug := r.PathValue("slug")
+		if slug == "" {
+			http.NotFound(w, r)
+			return
 		}
-		// find end of opening tag
-		openEnd := strings.Index(lower[start:], ">")
-		if openEnd < 0 {
-			break
+		page, err := models.GetPageBySlug(slug)
+		if err != nil || page.RenderMode != "standalone" {
+			http.NotFound(w, r)
+			return
 		}
-		end := strings.Index(lower[start:], "</style>")
-		if end < 0 {
-			break
-		}
-		end += start + len("</style>")
-		styles.WriteString(html[start:end])
-		styles.WriteString("\n")
-		// Remove from working copies
-		html = html[:start] + html[end:]
-		lower = strings.ToLower(html)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write([]byte(page.Content))
 	}
-
-	// Extract <body>...</body>
-	bStart := strings.Index(lower, "<body")
-	if bStart >= 0 {
-		bOpenEnd := strings.Index(lower[bStart:], ">")
-		if bOpenEnd >= 0 {
-			afterOpen := bStart + bOpenEnd + 1
-			bEnd := strings.Index(lower[afterOpen:], "</body>")
-			if bEnd >= 0 {
-				body = html[afterOpen : afterOpen+bEnd]
-			} else {
-				body = html[afterOpen:]
-			}
-		}
-	}
-	if body == "" {
-		body = html
-	}
-	return body, styles.String()
 }

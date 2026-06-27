@@ -31,6 +31,7 @@ func main() {
 	mux.HandleFunc("/about", handlers.About(cfg))
 	mux.HandleFunc("/contact", handlers.About(cfg))
 	mux.HandleFunc("/page/{slug}", handlers.PublicPage(cfg))
+	mux.HandleFunc("/page/{slug}/raw", handlers.PublicPageRaw(cfg))
 
 	mux.HandleFunc("/api/message", handlers.SubmitMessage(cfg))
 
@@ -103,7 +104,8 @@ func main() {
 func withMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("X-Frame-Options", "DENY")
+		// Allow same-origin iframe (used by standalone page rendering); still blocks external embedding
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		next.ServeHTTP(w, r)
 	})
